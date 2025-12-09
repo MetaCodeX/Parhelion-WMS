@@ -83,23 +83,6 @@ src/
 
 ---
 
-## Quick Start
-
-**Requisitos:** Docker y Docker Compose instalados.
-
-```bash
-# 1. Clonar el repositorio
-git clone https://github.com/MetaCodeX/Parhelion-WMS.git
-cd Parhelion-WMS
-
-# 2. Levantar la infraestructura (BD y API)
-docker-compose up --build
-```
-
-El API estará disponible en: `http://localhost:5000/swagger`
-
----
-
 ## Documentación
 
 | Documento                                        | Descripción                                   |
