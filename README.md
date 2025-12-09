@@ -1,4 +1,4 @@
-# Parhelion-Logistics
+# Parhelion Logistics
 
 ![Parhelion-Logistics Banner](./bannerlogo.png)
 
