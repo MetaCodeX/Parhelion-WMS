@@ -1,6 +1,6 @@
 # Parhelion-Logistics
 
-![Parhelion-Logistics Banner](./bannerlogo.jpg)
+![Parhelion-Logistics Banner](./bannerlogo.png)
 
 ![.NET 8](https://img.shields.io/badge/.NET%208-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)
