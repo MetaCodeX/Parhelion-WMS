@@ -1,6 +1,6 @@
-# Parhelion-WMS
+# Parhelion-Logistics
 
-![Parhelion-WMS Banner](./bannerlogo.jpg)
+![Parhelion-Logistics Banner](./bannerlogo.jpg)
 
 ![.NET 8](https://img.shields.io/badge/.NET%208-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)
@@ -9,17 +9,17 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-Sistema de Gestión de Almacén y Logística (Warehouse Management System) para la administración de flotillas, choferes, envíos y redes de distribución B2B.
+Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona inventarios, flotas tipificadas, redes Hub & Spoke y documentación legal (Carta Porte) en un entorno Multi-tenant.
 
-> **Estado del Proyecto:** Diseño Finalizado - Listo para Implementación
+> **Estado del Proyecto:** Diseño Finalizado (v2.3) - Listo para Implementación
 
 ---
 
 ## Descripción
 
-**Parhelion-WMS** es una plataforma SaaS multi-tenant centralizada diseñada para resolver la fragmentación logística en empresas de transporte B2B. Gestiona la operación completa desde una sola interfaz segura y escalable: flotillas tipificadas, red de distribución Hub & Spoke, trazabilidad por checkpoints y documentación legal (Carta Porte, POD).
+**Parhelion-Logistics** es una plataforma SaaS multi-tenant de nivel Enterprise que unifica las capacidades de un WMS (Warehouse Management System) y un TMS (Transportation Management System). Diseñada para empresas de transporte B2B que requieren gestión integral: inventarios estáticos en almacén, flotas tipificadas (refrigerado, HAZMAT, blindado), redes de distribución Hub & Spoke, trazabilidad por checkpoints y documentación legal mexicana (Carta Porte, POD).
 
-**Objetivo Técnico:** Implementación de **Clean Architecture** y **Domain-Driven Design (DDD)** en un entorno de producción utilizando .NET 8, Angular, React y contenedores Docker.
+**Objetivo Técnico:** Implementación de **Clean Architecture** y **Domain-Driven Design (DDD)** en un entorno de producción utilizando .NET 8, Angular, React, Docker y PostgreSQL.
 
 ---
 

@@ -1,7 +1,7 @@
-# PARHELION-WMS | Documento de Requerimientos de Software
+# PARHELION-LOGISTICS | Documento de Requerimientos de Software
 
 **Cliente:** Parhelion Logistics S.A. de C.V. (Monterrey, N.L.)
-**Versión:** 2.0 (Final - Scope Freeze)
+**Versión:** 2.3 (Final - Scope Freeze)
 **Fecha:** Diciembre 2025
 **Líder Técnico:** MetaCodeX
 
@@ -11,7 +11,7 @@
 
 La empresa "Parhelion Logistics" actualmente gestiona su flota de camiones y envíos mediante hojas de cálculo de Excel y mensajes de WhatsApp. Esto ha provocado pérdida de paquetes, camiones viajando vacíos y falta de documentación legal para inspecciones.
 
-**El Objetivo:** Desarrollar una plataforma Web centralizada (WMS) de nivel empresarial que permita administrar flotillas tipificadas, gestionar redes de distribución Hub & Spoke, generar documentación B2B legal y rastrear el estatus de los envíos mediante checkpoints manuales.
+**El Objetivo:** Desarrollar una Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise que permita administrar inventarios en almacén, flotillas tipificadas, redes de distribución Hub & Spoke, generar documentación legal mexicana (Carta Porte, POD) y rastrear el estatus de los envíos mediante checkpoints manuales.
 
 **Objetivo Secundario (Demo Pública):** El sistema servirá también como **portafolio técnico interactivo**, permitiendo a reclutadores y visitantes probar el simulador sin afectar datos reales de producción.
 

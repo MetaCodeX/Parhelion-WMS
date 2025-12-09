@@ -1,9 +1,11 @@
-# PARHELION-WMS | Modelo de Base de Datos
+# PARHELION-LOGISTICS | Modelo de Base de Datos
 
-**Versión:** 2.2 (Final - Scope Freeze)
+**Versión:** 2.3 (Final - Scope Freeze)
 **Fecha:** Diciembre 2025
 **Motor:** PostgreSQL + Entity Framework Core (Code First)
 **Estado:** Diseño Cerrado - Listo para Implementación
+
+> **Nota Técnica:** Esta plataforma unifica WMS (Warehouse Management System) y TMS (Transportation Management System). El módulo de almacén gestiona inventario estático y carga, mientras que el núcleo TMS maneja logística de media milla: gestión de flotas tipificadas, redes Hub & Spoke y trazabilidad de envíos en movimiento.
 
 ---
 
@@ -140,6 +142,7 @@ erDiagram
         uuid truck_id FK "nullable"
         uuid driver_id FK "nullable"
         boolean was_qr_scanned "True si se usó cámara"
+        boolean is_delayed "True si hay retraso (avería, tráfico)"
         datetime scheduled_departure "nullable - Fecha/hora salida planeada"
         datetime pickup_window_start "nullable - Ventana de recolección"
         datetime pickup_window_end "nullable"
@@ -154,6 +157,7 @@ erDiagram
         uuid shipment_id FK
         string sku "nullable"
         string description
+        string packaging_type "Pallet|Box|Drum|Piece"
         int quantity
         decimal weight_kg
         decimal width_cm
@@ -260,6 +264,16 @@ erDiagram
 | ------------------ | ------------------------------------------------------- |
 | `default_truck_id` | Camión fijo asignado al chofer ("su unidad")            |
 | `current_truck_id` | Camión que conduce actualmente (puede diferir del fijo) |
+
+**Source of Truth (Fuente de la Verdad):**
+
+> **Regla de Integridad:** La tabla `FLEET_LOG` es la fuente de verdad para la asignación Chofer-Camión. El campo `Driver.current_truck_id` es solo una caché del último registro del log.
+
+| Acción           | Implementación                                                                 |
+| ---------------- | ------------------------------------------------------------------------------ |
+| Cambio de Camión | 1. Insertar registro en `FleetLog` 2. Actualizar `Driver.current_truck_id`     |
+| Transacción      | Ambas operaciones DEBEN ejecutarse en la misma transacción (Transaction Scope) |
+| Rollback         | Si falla el insert en FleetLog, el current_truck_id NO debe cambiar            |
 
 **Razones de Cambio de Vehículo (FleetLog):**
 
@@ -568,6 +582,10 @@ CREATE INDEX idx_network_link_origin ON network_links(origin_location_id);
 CREATE INDEX idx_network_link_destination ON network_links(destination_location_id);
 CREATE INDEX idx_route_step_blueprint ON route_steps(route_blueprint_id, step_order);
 
+-- Dashboard (Consultas frecuentes)
+CREATE INDEX idx_shipment_date_tenant ON shipments(tenant_id, created_at DESC);
+CREATE INDEX idx_shipment_delayed ON shipments(tenant_id, is_delayed) WHERE is_delayed = true;
+
 -- Unicidad
 CREATE UNIQUE INDEX idx_truck_plate_per_tenant ON trucks(tenant_id, plate);
 CREATE UNIQUE INDEX idx_user_email ON users(email);
@@ -718,6 +736,7 @@ public class Shipment
     public Guid? TruckId { get; set; }
     public Guid? DriverId { get; set; }
     public bool WasQrScanned { get; set; }
+    public bool IsDelayed { get; set; }  // True si hay retraso (avería, tráfico)
 
     // Fechas y Ventanas
     public DateTime? ScheduledDeparture { get; set; }
@@ -753,6 +772,7 @@ public class ShipmentItem
     public Guid ShipmentId { get; set; }
     public string? Sku { get; set; }
     public string Description { get; set; } = null!;
+    public PackagingType PackagingType { get; set; }
     public int Quantity { get; set; }
     public decimal WeightKg { get; set; }
     public decimal WidthCm { get; set; }
@@ -769,6 +789,8 @@ public class ShipmentItem
     // Navigation Properties
     public Shipment Shipment { get; set; } = null!;
 }
+
+public enum PackagingType { Pallet, Box, Drum, Piece }
 ```
 
 ### Entidad ShipmentCheckpoint
@@ -914,6 +936,7 @@ public enum DriverStatus { Available, OnRoute, Inactive }
 // Tipos de Entidad
 public enum LocationType { RegionalHub, CrossDock, Warehouse, Store, SupplierPlant }
 public enum TruckType { DryBox, Refrigerated, HazmatTank, Flatbed, Armored }
+public enum PackagingType { Pallet, Box, Drum, Piece }
 public enum RouteStepType { Origin, Intermediate, Destination }
 public enum NetworkLinkType { FirstMile, LineHaul, LastMile }
 
