@@ -968,6 +968,74 @@ El sistema utiliza un stack tecnológico híbrido para cubrir las necesidades de
 
 ## 12. Escenarios de Simulación (Lógica de Negocio)
 
+### Escenario: Primera Milla (Recolección de Carga)
+
+**Descripción:** Flujo completo desde que un cliente solicita recolección hasta que la carga está en el camión.
+
+**Actores:** Cliente, Admin (Torre de Control), Chofer
+
+**Fase 1 - Solicitud:**
+
+| Paso | Acción                                                               | Estado Resultante |
+| ---- | -------------------------------------------------------------------- | ----------------- |
+| 1    | Cliente solicita recolección (llamada/portal)                        | -                 |
+| 2    | Admin crea `Shipment` con `origin_location_id` = fábrica del cliente | `PendingApproval` |
+| 3    | Se define `pickup_window_start/end` (ventana de recolección)         | `PendingApproval` |
+
+**Fase 2 - Despacho:**
+
+| Paso | Acción                                                   | Estado Resultante |
+| ---- | -------------------------------------------------------- | ----------------- |
+| 4    | Admin asigna ruta con enlace `FirstMile` (Cliente → Hub) | `PendingApproval` |
+| 5    | Admin asigna `driver_id` y `truck_id` disponibles        | `Approved`        |
+| 6    | Sistema genera `ShipmentDocument` tipo `TripSheet`       | `Approved`        |
+
+**Fase 3 - Ejecución en Campo:**
+
+| Paso | Acción                                                           | Estado Resultante |
+| ---- | ---------------------------------------------------------------- | ----------------- |
+| 7    | Chofer llega a ubicación del cliente                             | `Approved`        |
+| 8    | Chofer confirma llegada → `ShipmentCheckpoint` (`ArrivedHub`)    | `Approved`        |
+| 9    | Chofer escanea QR de carga → `ShipmentCheckpoint` (`QrScanned`)  | `Loaded`          |
+| 10   | Sistema habilita `ShipmentDocument` tipo `Waybill` (Carta Porte) | `Loaded`          |
+
+**Fase 4 - Tránsito a Hub:**
+
+| Paso | Acción                                                   | Estado Resultante |
+| ---- | -------------------------------------------------------- | ----------------- |
+| 11   | Chofer sale hacia `RegionalHub` de Parhelion             | `InTransit`       |
+| 12   | Chofer llega a Hub → `ShipmentCheckpoint` (`ArrivedHub`) | `AtHub`           |
+
+```mermaid
+sequenceDiagram
+    participant Cliente
+    participant Admin
+    participant API
+    participant Chofer
+
+    Cliente->>Admin: Solicita recolección
+    Admin->>API: POST /shipments (status=PendingApproval)
+    Admin->>API: PUT /shipments/{id}/assign (driver, truck, route)
+    API-->>Admin: status=Approved, TripSheet generado
+
+    Note over Chofer: Chofer viaja a ubicación
+
+    Chofer->>API: POST /checkpoints (ArrivedHub)
+    Chofer->>API: POST /checkpoints (QrScanned)
+    API-->>Chofer: status=Loaded, Waybill habilitado
+
+    Note over Chofer: Chofer viaja a Hub
+
+    Chofer->>API: POST /checkpoints (ArrivedHub)
+    API-->>Chofer: status=AtHub
+```
+
+**Transferencia de Custodia:**
+
+> El escaneo QR (`QrScanned`) marca el momento legal en que la responsabilidad de la carga pasa del cliente a Parhelion. Este evento es inmutable y auditable.
+
+---
+
 ### Escenario A: Chofer llega a una sede
 
 **Actor:** Chofer (App React)
