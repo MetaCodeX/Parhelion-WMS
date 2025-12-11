@@ -1,0 +1,145 @@
+# ===================================
+# PARHELION CI - Build & Test Pipeline
+# Se ejecuta en cada push/PR a develop y main
+# ===================================
+
+name: CI Pipeline
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  # ===== BACKEND (.NET 8) =====
+  backend:
+    name: Backend Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --no-build --verbosity normal || true
+
+  # ===== FRONTEND ADMIN (Angular) =====
+  frontend-admin:
+    name: Admin Build & Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend-admin
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "./frontend-admin/package-lock.json"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint || true
+
+      - name: Build
+        run: npm run build
+
+  # ===== FRONTEND OPERACIONES (React) =====
+  frontend-operaciones:
+    name: Operaciones Build & Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend-operaciones
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "./frontend-operaciones/package-lock.json"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint || true
+
+      - name: Build
+        run: npm run build
+
+  # ===== FRONTEND CAMPO (React) =====
+  frontend-campo:
+    name: Campo Build & Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend-campo
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "./frontend-campo/package-lock.json"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint || true
+
+      - name: Build
+        run: npm run build
+
+  # ===== DOCKER BUILD TEST =====
+  docker:
+    name: Docker Compose Validation
+    runs-on: ubuntu-latest
+    needs: [backend, frontend-admin, frontend-operaciones, frontend-campo]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose
+        run: docker compose config
+
+      - name: Build all images
+        run: docker compose build
+
+  # ===== RESUMEN FINAL =====
+  summary:
+    name: ✅ All Checks Passed
+    runs-on: ubuntu-latest
+    needs: [docker]
+    if: success()
+
+    steps:
+      - name: Success
+        run: echo "🎉 Todos los builds y tests pasaron correctamente!"

@@ -42,6 +42,12 @@ services:
         condition: service_healthy
     networks:
       - parhelion-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # ===== FRONTEND ADMIN (Angular) =====
   admin:
@@ -54,6 +60,11 @@ services:
       - "4200:80"
     networks:
       - parhelion-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ===== FRONTEND OPERACIONES (React PWA) =====
   operaciones:
@@ -66,6 +77,11 @@ services:
       - "5173:80"
     networks:
       - parhelion-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ===== FRONTEND CAMPO (React PWA) =====
   campo:
@@ -78,6 +94,11 @@ services:
       - "5174:80"
     networks:
       - parhelion-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ===== CLOUDFLARE TUNNEL =====
   cloudflared:
@@ -88,10 +109,14 @@ services:
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     depends_on:
-      - api
-      - admin
-      - operaciones
-      - campo
+      api:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
+      operaciones:
+        condition: service_healthy
+      campo:
+        condition: service_healthy
     networks:
       - parhelion-network
 
