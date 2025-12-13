@@ -139,7 +139,7 @@ erDiagram
     EMPLOYEE {
         uuid id PK
         uuid tenant_id FK
-        uuid user_id FK UK "1:1 con User"
+        uuid user_id FK "UK - 1:1 con User"
         string phone
         string rfc "nullable - RFC fiscal"
         string nss "nullable - Número de Seguro Social"
@@ -172,7 +172,7 @@ erDiagram
     WAREHOUSE_ZONE {
         uuid id PK
         uuid location_id FK
-        string code UK "A1, B2, COLD-1"
+        string code "UK - A1, B2, COLD-1"
         string name
         string type "Receiving|Storage|Staging|Shipping|ColdChain|Hazmat"
         boolean is_active
@@ -184,7 +184,7 @@ erDiagram
 
     WAREHOUSE_OPERATOR {
         uuid id PK
-        uuid employee_id FK UK "1:1 con Employee"
+        uuid employee_id FK "UK - 1:1 con Employee"
         uuid assigned_location_id FK
         uuid primary_zone_id FK "nullable"
         datetime created_at
