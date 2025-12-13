@@ -1,0 +1,132 @@
+# ===================================
+# PARHELION LOGISTICS - Docker Compose
+# Red unificada: parhelion-network
+# ===================================
+
+services:
+  # ===== BASE DE DATOS =====
+  postgres:
+    image: postgres:16-alpine
+    container_name: parhelion-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: parhelion_db
+      POSTGRES_USER: parhelion_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-parhelion_dev_123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - parhelion-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parhelion_user -d parhelion_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===== BACKEND API =====
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: parhelion-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=parhelion_db;Username=parhelion_user;Password=${DB_PASSWORD:-parhelion_dev_123}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - parhelion-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ===== FRONTEND ADMIN (Angular) =====
+  admin:
+    build:
+      context: ./frontend-admin
+      dockerfile: Dockerfile
+    container_name: parhelion-admin
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    networks:
+      - parhelion-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===== FRONTEND OPERACIONES (React PWA) =====
+  operaciones:
+    build:
+      context: ./frontend-operaciones
+      dockerfile: Dockerfile
+    container_name: parhelion-operaciones
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    networks:
+      - parhelion-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===== FRONTEND CAMPO (React PWA) =====
+  campo:
+    build:
+      context: ./frontend-campo
+      dockerfile: Dockerfile
+    container_name: parhelion-campo
+    restart: unless-stopped
+    ports:
+      - "5174:80"
+    networks:
+      - parhelion-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===== CLOUDFLARE TUNNEL =====
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: parhelion-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      api:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
+      operaciones:
+        condition: service_healthy
+      campo:
+        condition: service_healthy
+    networks:
+      - parhelion-network
+
+# ===== VOLUMES =====
+volumes:
+  postgres_data:
+    name: parhelion-postgres-data
+
+# ===== NETWORK =====
+networks:
+  parhelion-network:
+    name: parhelion-network
+    driver: bridge

@@ -6,12 +6,13 @@
 ![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![EF Core](https://img.shields.io/badge/EF%20Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona inventarios, flotas tipificadas, redes Hub & Spoke y documentación legal (Carta Porte) en un entorno Multi-tenant.
 
-> **Estado del Proyecto:** Diseño Finalizado (v2.3) - Listo para Implementación
+> **Estado:** Development Preview v0.4.3 - Employee Layer Implementado
 
 ---
 
@@ -28,8 +29,10 @@ Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona in
 ### Core
 
 - [x] Documentación de requerimientos y esquema de base de datos
-- [ ] **Arquitectura Base:** Configuración de Clean Architecture y estructura de proyecto
-- [ ] **Multi-tenancy:** Aislamiento de datos por cliente/empresa
+- [x] **Arquitectura Base:** Configuración de Clean Architecture y estructura de proyecto
+- [x] **Multi-tenancy:** Query Filters globales por TenantId
+- [x] **Domain Layer:** 14 entidades + 11 enumeraciones
+- [x] **Infrastructure Layer:** EF Core + PostgreSQL + Migrations
 
 ### Gestión de Flotilla
 
@@ -69,15 +72,41 @@ Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona in
 
 ## Stack Tecnológico
 
-| Capa                     | Tecnología                            | Usuario        |
-| :----------------------- | :------------------------------------ | :------------- |
-| **Backend**              | C# / .NET 8 Web API                   | -              |
-| **Base de Datos**        | PostgreSQL 16                         | -              |
-| **ORM**                  | Entity Framework Core (Code First)    | -              |
-| **Frontend (Admin)**     | Angular 18+ (Material Design)         | Admin          |
-| **Frontend (Operación)** | React (PWA)                           | Chofer/Almacén |
-| **Infraestructura**      | Docker Compose, Nginx (Reverse Proxy) | -              |
-| **Hosting**              | Digital Ocean Droplet (Linux)         | -              |
+| Capa                     | Tecnología                            | Usuario     |
+| :----------------------- | :------------------------------------ | :---------- |
+| **Backend**              | C# / .NET 8 Web API                   | -           |
+| **Base de Datos**        | PostgreSQL 16                         | -           |
+| **ORM**                  | Entity Framework Core (Code First)    | -           |
+| **Frontend (Admin)**     | Angular 18+ (Material Design)         | Admin       |
+| **Frontend (Operacion)** | React + Vite + Tailwind CSS (PWA)     | Almacenista |
+| **Frontend (Campo)**     | React + Vite + Tailwind CSS (PWA)     | Chofer      |
+| **Infraestructura**      | Docker Compose, Nginx (Reverse Proxy) | -           |
+| **Hosting**              | Digital Ocean Droplet (Linux)         | -           |
+
+---
+
+## Design System
+
+El proyecto utiliza un estilo visual **Neo-Brutalism** con la paleta de colores "Industrial Solar":
+
+| Token   | Color     | Uso                             |
+| :------ | :-------- | :------------------------------ |
+| `oxide` | `#C85A17` | Acciones, acentos, hover states |
+| `sand`  | `#E8E6E1` | Fondos secundarios              |
+| `black` | `#000000` | Bordes, texto, sombras          |
+| `white` | `#FAFAFA` | Fondos principales              |
+
+### Tipografía
+
+- **Logo:** New Rocker (display font)
+- **Títulos:** Merriweather (serif)
+- **Body:** Inter (sans-serif)
+
+### Componentes
+
+Los frontends incluyen componentes pre-estilizados: `btn`, `btn-primary`, `btn-oxide`, `card`, `input` con sombras brutalist y transiciones sólidas (sin gradientes).
+
+> UI inspirada en [neobrutalism-components](https://github.com/ekmas/neobrutalism-components)
 
 ---
 
@@ -122,6 +151,36 @@ graph TD
     MM ==>|LineHaul| CC
     CC -->|LastMile| G
 ```
+
+---
+
+## Base de Datos
+
+### Tecnologías
+
+| Componente | Tecnología                            | Versión     |
+| ---------- | ------------------------------------- | ----------- |
+| ORM        | Entity Framework Core                 | 8.0.10      |
+| Provider   | Npgsql.EntityFrameworkCore.PostgreSQL | 8.0.10      |
+| Database   | PostgreSQL                            | 17 (Docker) |
+| Migrations | Code First                            | ✅          |
+
+### Características de Seguridad
+
+- **Anti SQL Injection:** Queries parameterizadas automáticas de EF Core
+- **Multi-Tenancy:** Query Filters globales por TenantId
+- **Soft Delete:** Todas las entidades soportan borrado lógico
+- **Audit Trail:** CreatedAt, UpdatedAt, DeletedAt automáticos
+- **Password Hashing:** BCrypt (usuarios) + Argon2id (admins)
+
+### Naming Convention
+
+```
+PascalCase en C# → PascalCase en PostgreSQL
+Ejemplo: ShipmentItem.TenantId → "ShipmentItems"."TenantId"
+```
+
+Para más detalles técnicos, ver [Sección 12 de database-schema.md](./database-schema.md#12-metodología-de-implementación-detalles-técnicos)
 
 ---
 
