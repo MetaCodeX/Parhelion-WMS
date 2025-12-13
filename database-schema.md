@@ -50,6 +50,14 @@ erDiagram
     %% ========== HISTÓRICOS ==========
     DRIVER ||--o{ FLEET_LOG : "historial cambios vehículo"
 
+    %% ========== CLIENTES Y AUTH (v0.4.2) ==========
+    TENANT ||--o{ CLIENT : "tiene clientes"
+    CLIENT ||--o{ SHIPMENT : "envía como remitente"
+    CLIENT ||--o{ SHIPMENT : "recibe como destinatario"
+    USER ||--o{ REFRESH_TOKEN : "tiene tokens"
+    DRIVER ||--o{ SHIPMENT_CHECKPOINT : "maneja paquetes"
+    TRUCK ||--o{ SHIPMENT_CHECKPOINT : "carga paquetes"
+
     %% ========== ENTIDADES CORE ==========
     TENANT {
         uuid id PK
@@ -90,6 +98,14 @@ erDiagram
         uuid default_truck_id FK "nullable - asignación fija"
         uuid current_truck_id FK "nullable - camión actual"
         string status "Available|OnRoute|Inactive"
+        string rfc "nullable - RFC fiscal"
+        string nss "nullable - Número de Seguro Social"
+        string curp "nullable - CURP"
+        string license_type "nullable - A|B|C|D|E"
+        datetime license_expiration "nullable"
+        string emergency_contact "nullable"
+        string emergency_phone "nullable"
+        datetime hire_date "nullable - Fecha de contratación"
         datetime created_at
     }
 
@@ -102,6 +118,17 @@ erDiagram
         decimal max_capacity_kg
         decimal max_volume_m3
         boolean is_active
+        string vin "nullable - VIN"
+        string engine_number "nullable"
+        int year "nullable - Año del vehículo"
+        string color "nullable"
+        string insurance_policy "nullable - Número de póliza"
+        datetime insurance_expiration "nullable"
+        string verification_number "nullable - Verificación vehicular"
+        datetime verification_expiration "nullable"
+        datetime last_maintenance_date "nullable"
+        datetime next_maintenance_date "nullable"
+        decimal current_odometer_km "nullable"
         datetime created_at
     }
 
@@ -201,6 +228,36 @@ erDiagram
         string generated_by "System|User"
         datetime generated_at
         datetime expires_at "nullable - para documentos temporales"
+    }
+
+    %% ========== CLIENTES (v0.4.2) ==========
+    CLIENT {
+        uuid id PK
+        uuid tenant_id FK
+        string company_name "Nombre de la empresa"
+        string trade_name "nullable - Nombre comercial"
+        string contact_name "Contacto principal"
+        string email
+        string phone
+        string tax_id "nullable - RFC"
+        string legal_name "nullable - Razón Social"
+        string billing_address "nullable"
+        string shipping_address "Dirección de envío"
+        string preferred_product_types "nullable - Tipos de productos"
+        string priority "Normal|Low|High|Urgent"
+        boolean is_active
+    }
+
+    REFRESH_TOKEN {
+        uuid id PK
+        uuid user_id FK
+        string token_hash "Hash del token (nunca texto plano)"
+        datetime expires_at
+        boolean is_revoked
+        datetime revoked_at "nullable"
+        string revoked_reason "nullable"
+        string created_from_ip "nullable"
+        string user_agent "nullable"
     }
 
     %% ========== ENRUTAMIENTO (HUB & SPOKE) ==========
@@ -1202,4 +1259,174 @@ public class Driver
 
 ---
 
-**Siguiente Paso:** Usar este esquema para generar las migraciones de Entity Framework Core con `dotnet ef migrations add InitialCreate`.
+## 12. Metodología de Implementación (Detalles Técnicos)
+
+> **Estado:** ✅ Implementado en v0.4.0 + v0.4.1
+
+### 12.1 Tecnologías Utilizadas
+
+| Componente            | Tecnología                            | Versión     |
+| --------------------- | ------------------------------------- | ----------- |
+| ORM                   | Entity Framework Core                 | 8.0.10      |
+| Database Provider     | Npgsql.EntityFrameworkCore.PostgreSQL | 8.0.10      |
+| Base de Datos         | PostgreSQL                            | 17 (Docker) |
+| Contenedor            | postgres_db (Docker Compose)          | Up 2 months |
+| Entorno de Desarrollo | parhelion_dev                         | Created     |
+| Entorno de Producción | parhelion_prod                        | Pendiente   |
+
+### 12.2 Naming Convention
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│                    NAMING CONVENTION                          │
+├───────────────────────────────────────────────────────────────┤
+│  C# Entity Classes     →  PascalCase (e.g., ShipmentItem)    │
+│  PostgreSQL Tables     →  PascalCase (preservado por EF)      │
+│  PostgreSQL Columns    →  PascalCase (e.g., "TenantId")       │
+│  Indexes               →  IX_TableName_ColumnName             │
+│  Foreign Keys          →  FK_TableName_RelatedTable_Column    │
+└───────────────────────────────────────────────────────────────┘
+```
+
+**Nota:** PostgreSQL es case-sensitive cuando usa comillas dobles. EF Core automáticamente genera nombres con comillas, por ejemplo: `"IsDelayed"`.
+
+### 12.3 Arquitectura de Capas
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Parhelion.API                           │
+│  ├── Program.cs (DI, Middleware, Endpoints)                │
+│  ├── appsettings.json (Connection Strings)                 │
+│  └── Controllers/ (futuro)                                  │
+├─────────────────────────────────────────────────────────────┤
+│                  Parhelion.Application                       │
+│  ├── Services/ (Business Logic - futuro)                   │
+│  └── DTOs/ (Data Transfer Objects - futuro)                │
+├─────────────────────────────────────────────────────────────┤
+│                    Parhelion.Domain                          │
+│  ├── Common/                                                │
+│  │   └── BaseEntity.cs, TenantEntity.cs                    │
+│  ├── Entities/ (14 entidades)                               │
+│  │   └── Tenant, User, Role, Driver, Truck, Location...    │
+│  └── Enums/ (11 enumeraciones)                              │
+│       └── ShipmentStatus, TruckType, LocationType...       │
+├─────────────────────────────────────────────────────────────┤
+│                 Parhelion.Infrastructure                     │
+│  ├── Data/                                                  │
+│  │   ├── ParhelionDbContext.cs                              │
+│  │   ├── SeedData.cs                                        │
+│  │   ├── Configurations/ (14 IEntityTypeConfiguration)     │
+│  │   └── Migrations/                                        │
+│  │       └── 20251213001913_InitialCreate.cs                │
+│  └── Services/ (Repositories - futuro)                     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 12.4 Query Filters Globales
+
+El `ParhelionDbContext` implementa filtros automáticos aplicados a **todas** las consultas:
+
+```csharp
+// Soft Delete: Excluye registros eliminados
+modelBuilder.Entity<TEntity>().HasQueryFilter(e => !e.IsDeleted);
+
+// Multi-Tenancy: Filtra por tenant del usuario actual
+modelBuilder.Entity<TEntity>().HasQueryFilter(e =>
+    !e.IsDeleted && (_tenantId == null || e.TenantId == _tenantId)
+);
+```
+
+**Beneficios:**
+
+- ✅ SQL Injection Prevention: Queries siempre parameterizadas
+- ✅ Tenant Isolation: Datos nunca se mezclan entre clientes
+- ✅ Soft Delete: Datos nunca se pierden, solo se marcan
+
+### 12.5 Audit Trail Automático
+
+```csharp
+public override int SaveChanges()
+{
+    var entries = ChangeTracker.Entries<BaseEntity>();
+    var now = DateTime.UtcNow;
+
+    foreach (var entry in entries)
+    {
+        switch (entry.State)
+        {
+            case EntityState.Added:
+                entry.Entity.CreatedAt = now;
+                entry.Entity.IsDeleted = false;
+                break;
+
+            case EntityState.Modified:
+                entry.Entity.UpdatedAt = now;
+                if (entry.Entity.IsDeleted && entry.Entity.DeletedAt == null)
+                    entry.Entity.DeletedAt = now;
+                break;
+        }
+    }
+    return base.SaveChanges();
+}
+```
+
+### 12.6 Migración Aplicada
+
+```bash
+# Generar migración
+dotnet ef migrations add InitialCreate \
+    --project src/Parhelion.Infrastructure \
+    --startup-project src/Parhelion.API \
+    --output-dir Data/Migrations
+
+# Aplicar a PostgreSQL
+dotnet ef database update \
+    --project src/Parhelion.Infrastructure \
+    --startup-project src/Parhelion.API
+```
+
+**Resultado:** 14 tablas + 1 tabla de migraciones creadas:
+
+- `Tenants`, `Users`, `Roles`
+- `Drivers`, `Trucks`, `FleetLogs`
+- `Locations`, `NetworkLinks`, `RouteBlueprints`, `RouteSteps`
+- `Shipments`, `ShipmentItems`, `ShipmentCheckpoints`, `ShipmentDocuments`
+- `__EFMigrationsHistory`
+
+### 12.7 Seed Data
+
+Roles del sistema con IDs fijos (idempotente):
+
+| Role ID                              | Name      | Description                       |
+| ------------------------------------ | --------- | --------------------------------- |
+| 11111111-1111-1111-1111-111111111111 | Admin     | Gerente de Tráfico - Acceso total |
+| 22222222-2222-2222-2222-222222222222 | Driver    | Chofer - Solo sus envíos          |
+| 33333333-3333-3333-3333-333333333333 | DemoUser  | Usuario de demostración           |
+| 44444444-4444-4444-4444-444444444444 | Warehouse | Almacenista - Carga/Descarga      |
+
+### 12.8 Connection String
+
+```json
+// appsettings.json (desarrollo)
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=parhelion_dev;Username=MetaCodeX;Password=***"
+  }
+}
+```
+
+```yaml
+# docker-compose.yml (producción)
+environment:
+  - ConnectionStrings__DefaultConnection=Host=postgres;Database=parhelion_db;Username=parhelion_user;Password=${DB_PASSWORD}
+```
+
+---
+
+**Estado de Implementación:**
+
+- ✅ Domain Layer completo (14 entidades, 11 enums)
+- ✅ Infrastructure Layer completo (DbContext, Configurations, Migrations)
+- ✅ Base de datos creada y tablas verificadas
+- ⏳ API Endpoints CRUD (próximo)
+- ⏳ Autenticación JWT (próximo)

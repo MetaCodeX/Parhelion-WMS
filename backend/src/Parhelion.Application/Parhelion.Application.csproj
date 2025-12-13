@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Parhelion.Domain\Parhelion.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
