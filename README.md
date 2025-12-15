@@ -12,7 +12,7 @@
 
 Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona inventarios, flotas tipificadas, redes Hub & Spoke y documentación legal (Carta Porte) en un entorno Multi-tenant.
 
-> **Estado:** Development Preview v0.4.3 - Employee Layer Implementado
+> **Estado:** Development Preview v0.5.0 - API Skeleton Implementado
 
 ---
 
@@ -28,43 +28,45 @@ Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona in
 
 ### Core
 
-- [x] Documentación de requerimientos y esquema de base de datos
-- [x] **Arquitectura Base:** Configuración de Clean Architecture y estructura de proyecto
+- [x] Documentacion de requerimientos y esquema de base de datos
+- [x] **Arquitectura Base:** Configuracion de Clean Architecture y estructura de proyecto
 - [x] **Multi-tenancy:** Query Filters globales por TenantId
 - [x] **Domain Layer:** 14 entidades + 11 enumeraciones
 - [x] **Infrastructure Layer:** EF Core + PostgreSQL + Migrations
+- [x] **API Skeleton:** 22 endpoints base para todas las entidades
+- [x] **Autenticacion:** JWT con roles SuperAdmin/Admin/Driver/Warehouse
 
-### Gestión de Flotilla
+### Gestion de Flotilla
 
 - [ ] **Camiones Tipificados:** DryBox, Refrigerado, HAZMAT, Plataforma, Blindado
-- [ ] **Choferes:** Asignación fija (default_truck) y dinámica (current_truck)
-- [ ] **Bitácora de Flotilla:** Historial de cambios de vehículo (FleetLog)
+- [ ] **Choferes:** Asignacion fija (default_truck) y dinamica (current_truck)
+- [ ] **Bitacora de Flotilla:** Historial de cambios de vehiculo (FleetLog)
 
-### Red Logística (Hub & Spoke)
+### Red Logistica (Hub and Spoke)
 
 - [ ] **Nodos de Red:** RegionalHub, CrossDock, Warehouse, Store, SupplierPlant
-- [ ] **Códigos Aeroportuarios:** Identificadores únicos por ubicación (MTY, GDL, MM)
+- [ ] **Codigos Aeroportuarios:** Identificadores unicos por ubicacion (MTY, GDL, MM)
 - [ ] **Enlaces de Red:** Conexiones FirstMile, LineHaul, LastMile
-- [ ] **Rutas Predefinidas:** RouteBlueprint con paradas y tiempos de tránsito
+- [ ] **Rutas Predefinidas:** RouteBlueprint con paradas y tiempos de transito
 
-### Envíos y Trazabilidad
+### Envios y Trazabilidad
 
-- [ ] **Manifiesto de Carga:** Items con peso volumétrico y valor declarado
-- [ ] **Restricciones de Compatibilidad:** Cadena de frío, HAZMAT, Alto valor
-- [ ] **Checkpoints:** Bitácora de eventos (Loaded, QrScanned, ArrivedHub, Delivered)
+- [ ] **Manifiesto de Carga:** Items con peso volumetrico y valor declarado
+- [ ] **Restricciones de Compatibilidad:** Cadena de frio, HAZMAT, Alto valor
+- [ ] **Checkpoints:** Bitacora de eventos (Loaded, QrScanned, ArrivedHub, Delivered)
 - [ ] **QR Handshake:** Transferencia de custodia digital mediante escaneo
 
-### Documentación B2B
+### Documentacion B2B
 
-- [ ] **Orden de Servicio:** Petición inicial del cliente
+- [ ] **Orden de Servicio:** Peticion inicial del cliente
 - [ ] **Carta Porte (Waybill):** Documento legal SAT para transporte
 - [ ] **Manifiesto de Carga:** Checklist de estiba para almacenista
 - [ ] **Hoja de Ruta:** Itinerario con ventanas de entrega
 - [ ] **POD (Proof of Delivery):** Firma digital del receptor
 
-### Operación
+### Operacion
 
-- [ ] **Seguridad:** Autenticación JWT con roles (Admin/Chofer/Almacenista)
+- [x] **Seguridad:** Autenticacion JWT con roles (Admin/Chofer/Almacenista)
 - [ ] **Dashboard:** KPIs operativos en tiempo real
 - [ ] **Modo Demo:** Acceso para reclutadores sin registro previo
 
@@ -196,12 +198,13 @@ src/
 
 ---
 
-## Documentación
+## Documentacion
 
-| Documento                                        | Descripción                                   |
+| Documento                                        | Descripcion                                   |
 | :----------------------------------------------- | :-------------------------------------------- |
-| [Requerimientos (MVP)](./requirments.md)         | Especificación funcional completa del sistema |
+| [Requerimientos (MVP)](./requirments.md)         | Especificacion funcional completa del sistema |
 | [Esquema de Base de Datos](./database-schema.md) | Diagrama ER, entidades y reglas de negocio    |
+| [Arquitectura de API](./api-architecture.md)     | Estructura de capas y endpoints               |
 
 ---
 

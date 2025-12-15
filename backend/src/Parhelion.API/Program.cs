@@ -147,5 +147,7 @@ app.MapGet("/health/db", async (ParhelionDbContext db) =>
 .WithName("DatabaseHealthCheck")
 .WithOpenApi();
 
-app.Run();
+// Seed initial data (SuperUser, DefaultTenant) if database is empty
+await Parhelion.API.Data.DataSeeder.SeedAsync(app.Services);
 
+app.Run();

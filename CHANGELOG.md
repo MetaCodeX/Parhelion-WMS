@@ -4,12 +4,37 @@ Historial de cambios del proyecto Parhelion Logistics.
 
 ---
 
-## [Unreleased] - En desarrollo
+## [0.5.0] - 2025-12-15
 
-### Pendiente
+### Agregado
 
-- PWA Service Workers para modo offline
-- Endpoints CRUD para todas las entidades
+- **Endpoints API Skeleton (22 endpoints)**:
+
+  - Core Layer: Tenants, Users, Roles, Employees, Clients
+  - Warehouse Layer: Locations, WarehouseZones, WarehouseOperators, InventoryStocks, InventoryTransactions
+  - Fleet Layer: Trucks, Drivers, Shifts, FleetLogs
+  - Shipment Layer: Shipments, ShipmentItems, ShipmentCheckpoints, ShipmentDocuments, CatalogItems
+  - Network Layer: NetworkLinks, RouteBlueprints, RouteSteps
+
+- **Schema Metadata Endpoint**:
+
+  - `GET /api/Schema/metadata` - Retorna estructura de BD para herramientas
+  - `POST /api/Schema/refresh` - Invalida cache de metadata
+
+- **Documentacion**:
+  - Nuevo archivo `api-architecture.md` con estructura de capas y endpoints
+  - Documentacion de Swagger UI en `/swagger`
+
+### Modificado
+
+- Version del sistema actualizada a 0.5.0
+- CI/CD actualizado para verificar 24 tablas en base de datos
+
+### Notas Tecnicas
+
+- Endpoints responden con HTTP 200 (lista vacia) para GET autenticados
+- Logica CRUD pendiente para v0.5.x
+- Herramientas de desarrollo local excluidas del repositorio
 
 ---
 
