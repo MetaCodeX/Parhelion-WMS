@@ -1,7 +1,7 @@
 # ===================================
 # PARHELION CI - Build & Test Pipeline
 # Se ejecuta en cada push/PR a develop y main
-# v0.5.0: API Skeleton endpoints, 24 tablas en base de datos
+# v0.5.1: Foundation + Repository Pattern + xUnit Tests
 # ===================================
 
 name: CI Pipeline
@@ -15,7 +15,7 @@ on:
 jobs:
   # ===== BACKEND (.NET 8) + PostgreSQL Tests =====
   backend:
-    name: Backend Build & Integration Tests
+    name: Backend Build & xUnit Tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -24,7 +24,7 @@ jobs:
     # PostgreSQL service para tests de integracion reales
     services:
       postgres:
-        image: postgres:16
+        image: postgres:17
         env:
           POSTGRES_USER: parhelion_test
           POSTGRES_PASSWORD: test_password_ci
@@ -55,15 +55,15 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
-      # Tests de integracion con InMemory DB (rapidos, no requieren DB real)
-      - name: Run Integration Tests (InMemory)
+      # xUnit Tests (repository, pagination, foundation)
+      - name: Run xUnit Tests
         run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: backend-test-results
           path: backend/tests/**/test-results.trx
 
       # Validar que las migraciones se aplican correctamente a PostgreSQL
@@ -75,10 +75,10 @@ jobs:
         env:
           ASPNETCORE_ENVIRONMENT: Testing
 
-      - name: Verify Database Schema
+      - name: Verify Database Schema (24 tables)
         run: |
           echo "Verificando que todas las tablas existen en PostgreSQL (24 tablas esperadas)..."
-          PGPASSWORD=test_password_ci psql -h localhost -U parhelion_test -d parhelion_test_db -c "\dt" | grep -E "(Tenants|Users|Employees|Shifts|Drivers|Trucks|Locations|Shipments|CatalogItems|InventoryStocks|InventoryTransactions)" && echo "Schema validation passed (v0.5.0)"
+          PGPASSWORD=test_password_ci psql -h localhost -U parhelion_test -d parhelion_test_db -c "\dt" | grep -E "(Tenants|Users|Employees|Shifts|Drivers|Trucks|Locations|Shipments|CatalogItems|InventoryStocks|InventoryTransactions)" && echo "Schema validation passed (v0.5.1)"
 
   # ===== FRONTEND ADMIN (Angular) =====
   frontend-admin:

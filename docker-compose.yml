@@ -6,21 +6,21 @@
 services:
   # ===== BASE DE DATOS =====
   postgres:
-    image: postgres:16-alpine
+    image: postgres:17
     container_name: parhelion-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: parhelion_db
-      POSTGRES_USER: parhelion_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-parhelion_dev_123}
+      POSTGRES_DB: parhelion_dev
+      POSTGRES_USER: ${DB_USER:-MetaCodeX}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-H4NZC0D3X1521}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
       - parhelion-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U parhelion_user -d parhelion_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-MetaCodeX} -d parhelion_dev"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,10 +33,12 @@ services:
     container_name: parhelion-api
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "${BACKEND_PORT:-5100}:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=parhelion_db;Username=parhelion_user;Password=${DB_PASSWORD:-parhelion_dev_123}
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=parhelion_dev;Username=${DB_USER:-MetaCodeX};Password=${DB_PASSWORD:-H4NZC0D3X1521}
+      - Jwt__Secret=${JWT_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
@@ -57,7 +59,7 @@ services:
     container_name: parhelion-admin
     restart: unless-stopped
     ports:
-      - "4200:80"
+      - "${ADMIN_PORT:-4100}:80"
     networks:
       - parhelion-network
     healthcheck:
@@ -74,7 +76,7 @@ services:
     container_name: parhelion-operaciones
     restart: unless-stopped
     ports:
-      - "5173:80"
+      - "${OPERACIONES_PORT:-5101}:80"
     networks:
       - parhelion-network
     healthcheck:
@@ -91,7 +93,7 @@ services:
     container_name: parhelion-campo
     restart: unless-stopped
     ports:
-      - "5174:80"
+      - "${CAMPO_PORT:-5102}:80"
     networks:
       - parhelion-network
     healthcheck:
@@ -122,8 +124,9 @@ services:
 
 # ===== VOLUMES =====
 volumes:
-  postgres_data:
-    name: parhelion-postgres-data
+  postgres_pgdata:
+    external: true
+    name: postgres_pgdata
 
 # ===== NETWORK =====
 networks:

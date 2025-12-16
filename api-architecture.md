@@ -4,8 +4,8 @@ Documentacion tecnica de la estructura API-First del backend Parhelion.
 
 ## Estado Actual
 
-**Version:** 0.5.0  
-**Enfoque:** API-First (Skeleton Endpoints)  
+**Version:** 0.5.1  
+**Enfoque:** API-First (Skeleton + Foundation Layer)  
 **Arquitectura:** Clean Architecture + Domain-Driven Design
 
 ---
@@ -73,6 +73,29 @@ Gestion de red logistica Hub and Spoke.
 
 ---
 
+## Foundation Layer (v0.5.1)
+
+Infraestructura base para operaciones CRUD y transacciones.
+
+### Repository Pattern
+
+| Interfaz                | Implementacion      | Descripcion                      |
+| ----------------------- | ------------------- | -------------------------------- |
+| `IGenericRepository<T>` | `GenericRepository` | CRUD generico con soft delete    |
+| `ITenantRepository<T>`  | `TenantRepository`  | Filtrado automatico por TenantId |
+| `IUnitOfWork`           | `UnitOfWork`        | Coordinacion de transacciones    |
+
+### DTOs Comunes
+
+| DTO               | Uso                                       |
+| ----------------- | ----------------------------------------- |
+| `PagedRequest`    | Paginacion con Sort, Search, ActiveOnly   |
+| `PagedResult<T>`  | Respuesta con TotalPages, HasNext, etc    |
+| `BaseDto`         | Campos comunes (Id, CreatedAt, UpdatedAt) |
+| `OperationResult` | Respuestas estandarizadas                 |
+
+---
+
 ## Autenticacion
 
 Todos los endpoints protegidos requieren JWT Bearer token:
@@ -94,16 +117,6 @@ El token se obtiene via `/api/auth/login` con credenciales validas.
 
 ---
 
-## Documentacion Interactiva
-
-Swagger UI disponible en entorno de desarrollo:
-
-```
-http://localhost:5100/swagger
-```
-
----
-
 ## Base de Datos
 
 - **Tablas:** 24
@@ -112,16 +125,26 @@ http://localhost:5100/swagger
 
 ---
 
-## Pendientes
+## Tests (xUnit)
+
+| Test Suite               | Tests  | Cobertura                  |
+| ------------------------ | ------ | -------------------------- |
+| `PaginationDtoTests`     | 11     | PagedRequest, PagedResult  |
+| `GenericRepositoryTests` | 9      | CRUD, Soft Delete, Queries |
+| **Total**                | **28** | Foundation layer           |
+
+---
+
+## Pendientes (v0.5.2+)
 
 Los siguientes items quedan pendientes para futuras versiones:
 
-- Implementacion de logica CRUD completa en cada endpoint
-- Validaciones de DTOs con FluentValidation
-- Calculos de peso volumetrico y costos
-- Reglas de negocio (compatibilidad de carga, cadena de frio)
-- Generacion de documentos legales (Carta Porte, POD)
-- Tests unitarios y de integracion por endpoint
+- [ ] Servicios CRUD por entidad (TenantService, ShipmentService, etc.)
+- [ ] Validaciones de DTOs con FluentValidation
+- [ ] Calculos de peso volumetrico y costos
+- [ ] Reglas de negocio (compatibilidad de carga, cadena de frio)
+- [ ] Generacion de documentos legales (Carta Porte, POD)
+- [ ] Tests de logica de negocio (Fases 3-8)
 
 ---
 
@@ -131,4 +154,4 @@ La gestion de endpoints durante desarrollo utiliza herramientas privadas que no 
 
 ---
 
-**Ultima actualizacion:** 2025-12-15
+**Ultima actualizacion:** 2025-12-16

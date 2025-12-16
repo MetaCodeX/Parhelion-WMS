@@ -12,7 +12,7 @@
 
 Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona inventarios, flotas tipificadas, redes Hub & Spoke y documentación legal (Carta Porte) en un entorno Multi-tenant.
 
-> **Estado:** Development Preview v0.5.0 - API Skeleton Implementado
+> **Estado:** Development Preview v0.5.1 - Foundation Layer + Repository Pattern
 
 ---
 
@@ -35,6 +35,8 @@ Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona in
 - [x] **Infrastructure Layer:** EF Core + PostgreSQL + Migrations
 - [x] **API Skeleton:** 22 endpoints base para todas las entidades
 - [x] **Autenticacion:** JWT con roles SuperAdmin/Admin/Driver/Warehouse
+- [x] **Repository Pattern:** GenericRepository + UnitOfWork + Soft Delete
+- [x] **xUnit Tests:** 28 tests de foundation (paginacion, CRUD)
 
 ### Gestion de Flotilla
 
@@ -77,7 +79,7 @@ Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona in
 | Capa                     | Tecnología                            | Usuario     |
 | :----------------------- | :------------------------------------ | :---------- |
 | **Backend**              | C# / .NET 8 Web API                   | -           |
-| **Base de Datos**        | PostgreSQL 16                         | -           |
+| **Base de Datos**        | PostgreSQL 17                         | -           |
 | **ORM**                  | Entity Framework Core (Code First)    | -           |
 | **Frontend (Admin)**     | Angular 18+ (Material Design)         | Admin       |
 | **Frontend (Operacion)** | React + Vite + Tailwind CSS (PWA)     | Almacenista |

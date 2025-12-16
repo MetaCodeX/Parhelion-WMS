@@ -97,11 +97,13 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Swagger habilitado en todos los entornos para acceso via Tailscale
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Parhelion API v1");
+    options.RoutePrefix = "swagger";
+});
 
 app.UseCors("DevCors");
 

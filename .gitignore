@@ -70,4 +70,4 @@ TestResults/
 # ===== Local Development Tools (NEVER in production) =====
 # Control panel is a private development tool - never committed to repository
 control-panel/
-.agent/
+agent/

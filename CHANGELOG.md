@@ -4,6 +4,53 @@ Historial de cambios del proyecto Parhelion Logistics.
 
 ---
 
+## [0.5.1] - 2025-12-16
+
+### Agregado
+
+- **Foundation Layer (Repository Pattern)**:
+
+  - `IGenericRepository<T>` - Operaciones CRUD genericas con soft delete
+  - `ITenantRepository<T>` - Repositorio con aislamiento multi-tenant
+  - `IUnitOfWork` - Coordinacion de transacciones entre repositorios
+  - `GenericRepository` y `TenantRepository` implementaciones
+  - `UnitOfWork` con todos los repositorios (Core, Fleet, Warehouse, Shipment, Network)
+
+- **DTOs Comunes**:
+
+  - `PagedRequest` - Paginacion generica con ordenamiento y busqueda
+  - `PagedResult<T>` - Respuesta paginada con metadata (TotalPages, HasNext, etc.)
+  - `BaseDto`, `TenantDto` - DTOs base con campos de auditoria
+  - `OperationResult`, `OperationResult<T>` - Respuestas estandarizadas
+
+- **Infraestructura Docker**:
+
+  - `docker-compose.yml` actualizado con servicios: postgres, api, admin, operaciones, campo, tunnel
+  - PostgreSQL 17 con volumen externo `postgres_pgdata`
+  - Healthchecks configurados para todos los servicios
+  - Cloudflare Tunnel para acceso remoto
+
+- **xUnit Tests (28 tests)**:
+
+  - `PaginationDtoTests` - Validacion de paginacion
+  - `GenericRepositoryTests` - CRUD, soft delete, queries
+  - `InMemoryDbFixture` - Fixture con datos de prueba
+  - `TestDataBuilder` - Builder pattern para entidades de test
+
+### Modificado
+
+- CI/CD actualizado a v0.5.1 con paso explicito `Run xUnit Tests`
+- PostgreSQL actualizado a version 17 en CI
+- Swagger UI habilitado en todos los entornos (desarrollo via Tailscale)
+
+### Notas Tecnicas
+
+- Herramientas de desarrollo local (control-panel) excluidas del repositorio
+- Foundation layer es prerequisito para Services layer (v0.5.2+)
+- Tests de logica de negocio se implementan en fases 3-8
+
+---
+
 ## [0.5.0] - 2025-12-15
 
 ### Agregado
