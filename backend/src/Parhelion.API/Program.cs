@@ -41,6 +41,48 @@ builder.Services.AddDbContext<ParhelionDbContext>((sp, options) =>
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
+// ========== REPOSITORY PATTERN ==========
+builder.Services.AddScoped<Parhelion.Application.Interfaces.IUnitOfWork, 
+    Parhelion.Infrastructure.Repositories.UnitOfWork>();
+
+// ========== CORE LAYER SERVICES ==========
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.ITenantService, 
+    Parhelion.Infrastructure.Services.Core.TenantService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IUserService, 
+    Parhelion.Infrastructure.Services.Core.UserService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IRoleService, 
+    Parhelion.Infrastructure.Services.Core.RoleService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IEmployeeService, 
+    Parhelion.Infrastructure.Services.Core.EmployeeService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IClientService, 
+    Parhelion.Infrastructure.Services.Core.ClientService>();
+
+// ========== SHIPMENT LAYER SERVICES ==========
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IShipmentService, 
+    Parhelion.Infrastructure.Services.Shipment.ShipmentService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IShipmentItemService, 
+    Parhelion.Infrastructure.Services.Shipment.ShipmentItemService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IShipmentCheckpointService, 
+    Parhelion.Infrastructure.Services.Shipment.ShipmentCheckpointService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IShipmentDocumentService, 
+    Parhelion.Infrastructure.Services.Shipment.ShipmentDocumentService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.ICatalogItemService, 
+    Parhelion.Infrastructure.Services.Shipment.CatalogItemService>();
+
+// ========== FLEET LAYER SERVICES ==========
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IDriverService, 
+    Parhelion.Infrastructure.Services.Fleet.DriverService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.ITruckService, 
+    Parhelion.Infrastructure.Services.Fleet.TruckService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IFleetLogService, 
+    Parhelion.Infrastructure.Services.Fleet.FleetLogService>();
+
+// ========== NETWORK LAYER SERVICES ==========
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.ILocationService, 
+    Parhelion.Infrastructure.Services.Network.LocationService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IRouteService, 
+    Parhelion.Infrastructure.Services.Network.RouteService>();
+
 // ========== JWT AUTHENTICATION ==========
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
     ?? "ParhelionLogisticsDefaultSecretKey2024!";

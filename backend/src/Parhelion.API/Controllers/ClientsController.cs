@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Parhelion.Application.DTOs.Common;
 using Parhelion.Application.DTOs.Core;
-using Parhelion.Domain.Entities;
+using Parhelion.Application.Interfaces.Services;
 using Parhelion.Domain.Enums;
-using Parhelion.Infrastructure.Data;
 
 namespace Parhelion.API.Controllers;
 
@@ -16,157 +15,221 @@ namespace Parhelion.API.Controllers;
 [Authorize]
 public class ClientsController : ControllerBase
 {
-    private readonly ParhelionDbContext _context;
+    private readonly IClientService _clientService;
 
-    public ClientsController(ParhelionDbContext context)
+    /// <summary>
+    /// Inicializa el controlador con el servicio de Clients.
+    /// </summary>
+    /// <param name="clientService">Servicio de gestión de clientes.</param>
+    public ClientsController(IClientService clientService)
     {
-        _context = context;
+        _clientService = clientService;
     }
 
     /// <summary>
-    /// Obtiene todos los clientes del tenant.
+    /// Obtiene todos los clientes con paginación.
     /// </summary>
+    /// <param name="request">Parámetros de paginación.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <returns>Lista paginada de clientes.</returns>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ClientResponse>>> GetAll()
+    public async Task<ActionResult<PagedResult<ClientResponse>>> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken = default)
     {
-        var items = await _context.Clients
-            .Where(x => !x.IsDeleted)
-            .OrderBy(x => x.CompanyName)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-
-        return Ok(items);
+        var result = await _clientService.GetAllAsync(request, cancellationToken);
+        return Ok(result);
     }
 
     /// <summary>
     /// Obtiene un cliente por ID.
     /// </summary>
+    /// <param name="id">ID del cliente.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <returns>Cliente encontrado.</returns>
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ClientResponse>> GetById(Guid id)
+    public async Task<ActionResult<ClientResponse>> GetById(
+        Guid id,
+        CancellationToken cancellationToken = default)
     {
-        var item = await _context.Clients
-            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-
+        var item = await _clientService.GetByIdAsync(id, cancellationToken);
         if (item == null)
             return NotFound(new { error = "Cliente no encontrado" });
 
-        return Ok(MapToResponse(item));
+        return Ok(item);
     }
 
     /// <summary>
-    /// Busca clientes por nombre o email.
+    /// Busca un cliente por email.
     /// </summary>
-    [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<ClientResponse>>> Search([FromQuery] string q)
+    /// <param name="email">Email del cliente.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <returns>Cliente encontrado.</returns>
+    [HttpGet("by-email")]
+    public async Task<ActionResult<ClientResponse>> GetByEmail(
+        [FromQuery] string email,
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(q))
-            return BadRequest(new { error = "El parámetro 'q' es requerido" });
+        if (string.IsNullOrWhiteSpace(email))
+            return BadRequest(new { error = "El parámetro 'email' es requerido" });
 
-        var query = q.ToLower();
-        var items = await _context.Clients
-            .Where(x => !x.IsDeleted && 
-                (x.CompanyName.ToLower().Contains(query) || 
-                 x.ContactName.ToLower().Contains(query) ||
-                 x.Email.ToLower().Contains(query)))
-            .OrderBy(x => x.CompanyName)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
+        var item = await _clientService.GetByEmailAsync(email, cancellationToken);
+        if (item == null)
+            return NotFound(new { error = "Cliente no encontrado" });
 
-        return Ok(items);
+        return Ok(item);
     }
 
     /// <summary>
-    /// Crea un nuevo cliente.
+    /// Busca un cliente por Tax ID (RFC).
     /// </summary>
-    [HttpPost]
-    public async Task<ActionResult<ClientResponse>> Create([FromBody] CreateClientRequest request)
+    /// <param name="taxId">RFC del cliente.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <returns>Cliente encontrado.</returns>
+    [HttpGet("by-tax-id/{taxId}")]
+    public async Task<ActionResult<ClientResponse>> GetByTaxId(
+        string taxId,
+        CancellationToken cancellationToken = default)
+    {
+        var item = await _clientService.GetByTaxIdAsync(taxId, cancellationToken);
+        if (item == null)
+            return NotFound(new { error = "Cliente no encontrado" });
+
+        return Ok(item);
+    }
+
+    /// <summary>
+    /// Obtiene clientes del tenant actual.
+    /// </summary>
+    /// <param name="request">Parámetros de paginación.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <returns>Lista paginada de clientes del tenant.</returns>
+    [HttpGet("current-tenant")]
+    public async Task<ActionResult<PagedResult<ClientResponse>>> GetByCurrentTenant(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken = default)
     {
         var tenantIdClaim = User.FindFirst("tenant_id");
         if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
             return Unauthorized(new { error = "No se pudo determinar el tenant" });
 
-        var item = new Client
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            CompanyName = request.CompanyName,
-            TradeName = request.TradeName,
-            ContactName = request.ContactName,
-            Email = request.Email,
-            Phone = request.Phone,
-            TaxId = request.TaxId,
-            LegalName = request.LegalName,
-            BillingAddress = request.BillingAddress,
-            ShippingAddress = request.ShippingAddress,
-            PreferredProductTypes = request.PreferredProductTypes,
-            Priority = Enum.TryParse<ClientPriority>(request.Priority, out var priority) 
-                ? priority : ClientPriority.Normal,
-            Notes = request.Notes,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
+        var result = await _clientService.GetByTenantAsync(tenantId, request, cancellationToken);
+        return Ok(result);
+    }
 
-        _context.Clients.Add(item);
-        await _context.SaveChangesAsync();
+    /// <summary>
+    /// Obtiene clientes por prioridad del tenant actual.
+    /// </summary>
+    /// <param name="priority">Prioridad del cliente (Normal, Low, High, Urgent).</param>
+    /// <param name="request">Parámetros de paginación.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <returns>Lista paginada de clientes con la prioridad especificada.</returns>
+    [HttpGet("by-priority/{priority}")]
+    public async Task<ActionResult<PagedResult<ClientResponse>>> GetByPriority(
+        string priority,
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.TryParse<ClientPriority>(priority, out var clientPriority))
+            return BadRequest(new { error = "Prioridad inválida" });
 
-        return CreatedAtAction(nameof(GetById), new { id = item.Id }, MapToResponse(item));
+        var tenantIdClaim = User.FindFirst("tenant_id");
+        if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
+            return Unauthorized(new { error = "No se pudo determinar el tenant" });
+
+        var result = await _clientService.GetByPriorityAsync(
+            tenantId, clientPriority, request, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Busca clientes por nombre de empresa.
+    /// </summary>
+    /// <param name="companyName">Nombre parcial de la empresa.</param>
+    /// <param name="request">Parámetros de paginación.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <returns>Lista paginada de clientes que coinciden.</returns>
+    [HttpGet("search")]
+    public async Task<ActionResult<PagedResult<ClientResponse>>> Search(
+        [FromQuery] string companyName,
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(companyName))
+            return BadRequest(new { error = "El parámetro 'companyName' es requerido" });
+
+        var tenantIdClaim = User.FindFirst("tenant_id");
+        if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
+            return Unauthorized(new { error = "No se pudo determinar el tenant" });
+
+        var result = await _clientService.SearchByCompanyNameAsync(
+            tenantId, companyName, request, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Crea un nuevo cliente.
+    /// </summary>
+    /// <param name="request">Datos del nuevo cliente.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <returns>Cliente creado.</returns>
+    [HttpPost]
+    public async Task<ActionResult<ClientResponse>> Create(
+        [FromBody] CreateClientRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _clientService.CreateAsync(request, cancellationToken);
+        
+        if (!result.Success)
+            return Conflict(new { error = result.Message });
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = result.Data!.Id },
+            result.Data);
     }
 
     /// <summary>
     /// Actualiza un cliente existente.
     /// </summary>
+    /// <param name="id">ID del cliente.</param>
+    /// <param name="request">Datos de actualización.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <returns>Cliente actualizado.</returns>
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<ClientResponse>> Update(Guid id, [FromBody] UpdateClientRequest request)
+    public async Task<ActionResult<ClientResponse>> Update(
+        Guid id,
+        [FromBody] UpdateClientRequest request,
+        CancellationToken cancellationToken = default)
     {
-        var item = await _context.Clients
-            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        var result = await _clientService.UpdateAsync(id, request, cancellationToken);
+        
+        if (!result.Success)
+        {
+            if (result.Message?.Contains("no encontrado") == true)
+                return NotFound(new { error = result.Message });
+            return Conflict(new { error = result.Message });
+        }
 
-        if (item == null)
-            return NotFound(new { error = "Cliente no encontrado" });
-
-        item.CompanyName = request.CompanyName;
-        item.TradeName = request.TradeName;
-        item.ContactName = request.ContactName;
-        item.Email = request.Email;
-        item.Phone = request.Phone;
-        item.TaxId = request.TaxId;
-        item.LegalName = request.LegalName;
-        item.BillingAddress = request.BillingAddress;
-        item.ShippingAddress = request.ShippingAddress;
-        item.PreferredProductTypes = request.PreferredProductTypes;
-        item.Priority = Enum.TryParse<ClientPriority>(request.Priority, out var priority) 
-            ? priority : ClientPriority.Normal;
-        item.IsActive = request.IsActive;
-        item.Notes = request.Notes;
-        item.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-        return Ok(MapToResponse(item));
+        return Ok(result.Data);
     }
 
     /// <summary>
     /// Elimina (soft-delete) un cliente.
     /// </summary>
+    /// <param name="id">ID del cliente.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <returns>204 No Content.</returns>
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(
+        Guid id,
+        CancellationToken cancellationToken = default)
     {
-        var item = await _context.Clients
-            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-
-        if (item == null)
-            return NotFound(new { error = "Cliente no encontrado" });
-
-        item.IsDeleted = true;
-        item.DeletedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        var result = await _clientService.DeleteAsync(id, cancellationToken);
+        
+        if (!result.Success)
+            return NotFound(new { error = result.Message });
 
         return NoContent();
     }
-
-    private static ClientResponse MapToResponse(Client x) => new(
-        x.Id, x.CompanyName, x.TradeName, x.ContactName, x.Email, x.Phone,
-        x.TaxId, x.LegalName, x.BillingAddress, x.ShippingAddress,
-        x.PreferredProductTypes, x.Priority.ToString(), x.IsActive, x.Notes,
-        x.CreatedAt, x.UpdatedAt
-    );
 }

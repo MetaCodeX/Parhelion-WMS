@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Parhelion.Application.DTOs.Common;
 using Parhelion.Application.DTOs.Shipment;
-using Parhelion.Domain.Entities;
+using Parhelion.Application.Interfaces.Services;
 using Parhelion.Domain.Enums;
-using Parhelion.Infrastructure.Data;
 
 namespace Parhelion.API.Controllers;
 
@@ -16,167 +15,211 @@ namespace Parhelion.API.Controllers;
 [Authorize]
 public class ShipmentsController : ControllerBase
 {
-    private readonly ParhelionDbContext _context;
+    private readonly IShipmentService _shipmentService;
 
-    public ShipmentsController(ParhelionDbContext context)
+    /// <summary>
+    /// Inicializa el controlador con el servicio de Shipments.
+    /// </summary>
+    public ShipmentsController(IShipmentService shipmentService)
     {
-        _context = context;
+        _shipmentService = shipmentService;
     }
 
+    /// <summary>
+    /// Obtiene todos los envíos con paginación.
+    /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ShipmentResponse>>> GetAll()
+    public async Task<ActionResult<PagedResult<ShipmentResponse>>> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken = default)
     {
-        var items = await _context.Shipments
-            .Include(x => x.OriginLocation)
-            .Include(x => x.DestinationLocation)
-            .Include(x => x.Sender)
-            .Include(x => x.RecipientClient)
-            .Include(x => x.Truck)
-            .Include(x => x.Driver).ThenInclude(d => d!.Employee).ThenInclude(e => e.User)
-            .Where(x => !x.IsDeleted)
-            .OrderByDescending(x => x.CreatedAt)
-            .Take(100)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var result = await _shipmentService.GetAllAsync(request, cancellationToken);
+        return Ok(result);
     }
 
+    /// <summary>
+    /// Obtiene un envío por ID.
+    /// </summary>
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ShipmentResponse>> GetById(Guid id)
+    public async Task<ActionResult<ShipmentResponse>> GetById(
+        Guid id,
+        CancellationToken cancellationToken = default)
     {
-        var item = await GetShipmentWithIncludes().FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Envío no encontrado" });
-        return Ok(MapToResponse(item));
+        var item = await _shipmentService.GetByIdAsync(id, cancellationToken);
+        if (item == null)
+            return NotFound(new { error = "Envío no encontrado" });
+
+        return Ok(item);
     }
 
+    /// <summary>
+    /// Busca un envío por número de tracking.
+    /// </summary>
     [HttpGet("by-tracking/{trackingNumber}")]
-    public async Task<ActionResult<ShipmentResponse>> ByTracking(string trackingNumber)
+    public async Task<ActionResult<ShipmentResponse>> ByTracking(
+        string trackingNumber,
+        CancellationToken cancellationToken = default)
     {
-        var item = await GetShipmentWithIncludes()
-            .FirstOrDefaultAsync(x => x.TrackingNumber == trackingNumber && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Envío no encontrado" });
-        return Ok(MapToResponse(item));
+        var item = await _shipmentService.GetByTrackingNumberAsync(trackingNumber, cancellationToken);
+        if (item == null)
+            return NotFound(new { error = "Envío no encontrado" });
+
+        return Ok(item);
     }
 
+    /// <summary>
+    /// Obtiene envíos por estatus.
+    /// </summary>
     [HttpGet("by-status/{status}")]
-    public async Task<ActionResult<IEnumerable<ShipmentResponse>>> ByStatus(string status)
+    public async Task<ActionResult<PagedResult<ShipmentResponse>>> ByStatus(
+        string status,
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken = default)
     {
         if (!Enum.TryParse<ShipmentStatus>(status, out var shipmentStatus))
             return BadRequest(new { error = "Estatus inválido" });
 
-        var items = await GetShipmentWithIncludes()
-            .Where(x => !x.IsDeleted && x.Status == shipmentStatus)
-            .OrderByDescending(x => x.CreatedAt)
-            .Take(100)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var tenantIdClaim = User.FindFirst("tenant_id");
+        if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
+            return Unauthorized(new { error = "No se pudo determinar el tenant" });
+
+        var result = await _shipmentService.GetByStatusAsync(tenantId, shipmentStatus, request, cancellationToken);
+        return Ok(result);
     }
 
-    [HttpPost]
-    public async Task<ActionResult<ShipmentResponse>> Create([FromBody] CreateShipmentRequest request)
+    /// <summary>
+    /// Obtiene envíos del tenant actual.
+    /// </summary>
+    [HttpGet("current-tenant")]
+    public async Task<ActionResult<PagedResult<ShipmentResponse>>> GetByCurrentTenant(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken = default)
     {
         var tenantIdClaim = User.FindFirst("tenant_id");
         if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
             return Unauthorized(new { error = "No se pudo determinar el tenant" });
 
-        var trackingNumber = GenerateTrackingNumber();
-        var item = new Domain.Entities.Shipment
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            TrackingNumber = trackingNumber,
-            QrCodeData = $"PAR:{trackingNumber}",
-            OriginLocationId = request.OriginLocationId,
-            DestinationLocationId = request.DestinationLocationId,
-            SenderId = request.SenderId,
-            RecipientClientId = request.RecipientClientId,
-            RecipientName = request.RecipientName,
-            RecipientPhone = request.RecipientPhone,
-            TotalWeightKg = request.TotalWeightKg,
-            TotalVolumeM3 = request.TotalVolumeM3,
-            DeclaredValue = request.DeclaredValue,
-            SatMerchandiseCode = request.SatMerchandiseCode,
-            DeliveryInstructions = request.DeliveryInstructions,
-            Priority = Enum.TryParse<ShipmentPriority>(request.Priority, out var p) ? p : ShipmentPriority.Normal,
-            Status = ShipmentStatus.PendingApproval,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.Shipments.Add(item);
-        await _context.SaveChangesAsync();
-
-        item = await GetShipmentWithIncludes().FirstAsync(x => x.Id == item.Id);
-        return CreatedAtAction(nameof(GetById), new { id = item.Id }, MapToResponse(item));
+        var result = await _shipmentService.GetByTenantAsync(tenantId, request, cancellationToken);
+        return Ok(result);
     }
 
+    /// <summary>
+    /// Obtiene envíos asignados a un chofer.
+    /// </summary>
+    [HttpGet("by-driver/{driverId:guid}")]
+    public async Task<ActionResult<PagedResult<ShipmentResponse>>> ByDriver(
+        Guid driverId,
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _shipmentService.GetByDriverAsync(driverId, request, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Obtiene envíos por ubicación.
+    /// </summary>
+    [HttpGet("by-location/{locationId:guid}")]
+    public async Task<ActionResult<PagedResult<ShipmentResponse>>> ByLocation(
+        Guid locationId,
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _shipmentService.GetByLocationAsync(locationId, request, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Crea un nuevo envío.
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<ShipmentResponse>> Create(
+        [FromBody] CreateShipmentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _shipmentService.CreateAsync(request, cancellationToken);
+        
+        if (!result.Success)
+            return Conflict(new { error = result.Message });
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = result.Data!.Id },
+            result.Data);
+    }
+
+    /// <summary>
+    /// Actualiza un envío existente.
+    /// </summary>
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<ShipmentResponse>> Update(Guid id, [FromBody] UpdateShipmentRequest request)
+    public async Task<ActionResult<ShipmentResponse>> Update(
+        Guid id,
+        [FromBody] UpdateShipmentRequest request,
+        CancellationToken cancellationToken = default)
     {
-        var item = await GetShipmentWithIncludes().FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Envío no encontrado" });
+        var result = await _shipmentService.UpdateAsync(id, request, cancellationToken);
+        
+        if (!result.Success)
+        {
+            if (result.Message?.Contains("no encontrado") == true)
+                return NotFound(new { error = result.Message });
+            return Conflict(new { error = result.Message });
+        }
 
-        item.AssignedRouteId = request.AssignedRouteId;
-        item.CurrentStepOrder = request.CurrentStepOrder;
-        item.DeliveryInstructions = request.DeliveryInstructions;
-        item.Priority = Enum.TryParse<ShipmentPriority>(request.Priority, out var p) ? p : item.Priority;
-        item.Status = Enum.TryParse<ShipmentStatus>(request.Status, out var s) ? s : item.Status;
-        item.TruckId = request.TruckId;
-        item.DriverId = request.DriverId;
-        item.WasQrScanned = request.WasQrScanned;
-        item.IsDelayed = request.IsDelayed;
-        item.ScheduledDeparture = request.ScheduledDeparture;
-        item.PickupWindowStart = request.PickupWindowStart;
-        item.PickupWindowEnd = request.PickupWindowEnd;
-        item.EstimatedArrival = request.EstimatedArrival;
-        item.AssignedAt = request.AssignedAt;
-        item.DeliveredAt = request.DeliveredAt;
-        item.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-        return Ok(MapToResponse(item));
+        return Ok(result.Data);
     }
 
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
+    /// <summary>
+    /// Asigna un envío a un chofer y camión.
+    /// </summary>
+    [HttpPatch("{id:guid}/assign")]
+    public async Task<ActionResult<ShipmentResponse>> AssignToDriver(
+        Guid id,
+        [FromQuery] Guid driverId,
+        [FromQuery] Guid truckId,
+        CancellationToken cancellationToken = default)
     {
-        var item = await _context.Shipments.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Envío no encontrado" });
+        var result = await _shipmentService.AssignToDriverAsync(id, driverId, truckId, cancellationToken);
+        
+        if (!result.Success)
+            return BadRequest(new { error = result.Message });
 
-        item.IsDeleted = true;
-        item.DeletedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        return Ok(result.Data);
+    }
+
+    /// <summary>
+    /// Actualiza el estatus de un envío.
+    /// </summary>
+    [HttpPatch("{id:guid}/status")]
+    public async Task<ActionResult<ShipmentResponse>> UpdateStatus(
+        Guid id,
+        [FromQuery] string status,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.TryParse<ShipmentStatus>(status, out var newStatus))
+            return BadRequest(new { error = "Estatus inválido" });
+
+        var result = await _shipmentService.UpdateStatusAsync(id, newStatus, cancellationToken);
+        
+        if (!result.Success)
+            return BadRequest(new { error = result.Message });
+
+        return Ok(result.Data);
+    }
+
+    /// <summary>
+    /// Elimina (soft-delete) un envío.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _shipmentService.DeleteAsync(id, cancellationToken);
+        
+        if (!result.Success)
+            return NotFound(new { error = result.Message });
+
         return NoContent();
     }
-
-    private IQueryable<Domain.Entities.Shipment> GetShipmentWithIncludes() => _context.Shipments
-        .Include(x => x.OriginLocation)
-        .Include(x => x.DestinationLocation)
-        .Include(x => x.Sender)
-        .Include(x => x.RecipientClient)
-        .Include(x => x.Truck)
-        .Include(x => x.Driver).ThenInclude(d => d!.Employee).ThenInclude(e => e.User);
-
-    private static string GenerateTrackingNumber()
-    {
-        var random = new Random();
-        return $"PAR-{random.Next(100000, 999999)}";
-    }
-
-    private static ShipmentResponse MapToResponse(Domain.Entities.Shipment x) => new(
-        x.Id, x.TrackingNumber, x.QrCodeData,
-        x.OriginLocationId, x.OriginLocation?.Name ?? "",
-        x.DestinationLocationId, x.DestinationLocation?.Name ?? "",
-        x.SenderId, x.Sender?.CompanyName,
-        x.RecipientClientId, x.RecipientClient?.CompanyName,
-        x.RecipientName, x.RecipientPhone,
-        x.TotalWeightKg, x.TotalVolumeM3, x.DeclaredValue,
-        x.SatMerchandiseCode, x.DeliveryInstructions,
-        x.Priority.ToString(), x.Status.ToString(),
-        x.TruckId, x.Truck?.Plate,
-        x.DriverId, x.Driver?.Employee?.User?.FullName,
-        x.WasQrScanned, x.IsDelayed,
-        x.ScheduledDeparture, x.EstimatedArrival, x.DeliveredAt,
-        x.CreatedAt, x.UpdatedAt
-    );
 }

@@ -4,8 +4,8 @@ Documentacion tecnica de la estructura API-First del backend Parhelion.
 
 ## Estado Actual
 
-**Version:** 0.5.1  
-**Enfoque:** API-First (Skeleton + Foundation Layer)  
+**Version:** 0.5.2  
+**Enfoque:** Services Layer Implementation  
 **Arquitectura:** Clean Architecture + Domain-Driven Design
 
 ---
@@ -18,58 +18,82 @@ El backend esta organizado en 5 capas logicas que agrupan los endpoints segun su
 
 Gestion de identidad, usuarios y estructura organizacional.
 
-| Endpoint         | Entidad  | Estado   |
-| ---------------- | -------- | -------- |
-| `/api/tenants`   | Tenant   | Skeleton |
-| `/api/users`     | User     | Skeleton |
-| `/api/roles`     | Role     | Skeleton |
-| `/api/employees` | Employee | Skeleton |
-| `/api/clients`   | Client   | Skeleton |
+| Endpoint         | Entidad  | Estado   | Service         |
+| ---------------- | -------- | -------- | --------------- |
+| `/api/tenants`   | Tenant   | Services | TenantService   |
+| `/api/users`     | User     | Services | UserService     |
+| `/api/roles`     | Role     | Services | RoleService     |
+| `/api/employees` | Employee | Services | EmployeeService |
+| `/api/clients`   | Client   | Services | ClientService   |
 
 ### Warehouse Layer
 
 Gestion de almacenes, zonas e inventario.
 
-| Endpoint                      | Entidad              | Estado   |
-| ----------------------------- | -------------------- | -------- |
-| `/api/locations`              | Location             | Skeleton |
-| `/api/warehouse-zones`        | WarehouseZone        | Skeleton |
-| `/api/warehouse-operators`    | WarehouseOperator    | Skeleton |
-| `/api/inventory-stocks`       | InventoryStock       | Skeleton |
-| `/api/inventory-transactions` | InventoryTransaction | Skeleton |
+| Endpoint                      | Entidad              | Estado   | Service         |
+| ----------------------------- | -------------------- | -------- | --------------- |
+| `/api/locations`              | Location             | Services | LocationService |
+| `/api/warehouse-zones`        | WarehouseZone        | Skeleton | -               |
+| `/api/warehouse-operators`    | WarehouseOperator    | Skeleton | -               |
+| `/api/inventory-stocks`       | InventoryStock       | Skeleton | -               |
+| `/api/inventory-transactions` | InventoryTransaction | Skeleton | -               |
 
 ### Fleet Layer
 
 Gestion de flotilla, choferes y turnos.
 
-| Endpoint          | Entidad  | Estado   |
-| ----------------- | -------- | -------- |
-| `/api/trucks`     | Truck    | Skeleton |
-| `/api/drivers`    | Driver   | Skeleton |
-| `/api/shifts`     | Shift    | Skeleton |
-| `/api/fleet-logs` | FleetLog | Skeleton |
+| Endpoint          | Entidad  | Estado   | Service         |
+| ----------------- | -------- | -------- | --------------- |
+| `/api/trucks`     | Truck    | Services | TruckService    |
+| `/api/drivers`    | Driver   | Services | DriverService   |
+| `/api/shifts`     | Shift    | Skeleton | -               |
+| `/api/fleet-logs` | FleetLog | Services | FleetLogService |
 
 ### Shipment Layer
 
 Gestion de envios, items y trazabilidad.
 
-| Endpoint                    | Entidad            | Estado   |
-| --------------------------- | ------------------ | -------- |
-| `/api/shipments`            | Shipment           | Skeleton |
-| `/api/shipment-items`       | ShipmentItem       | Skeleton |
-| `/api/shipment-checkpoints` | ShipmentCheckpoint | Skeleton |
-| `/api/shipment-documents`   | ShipmentDocument   | Skeleton |
-| `/api/catalog-items`        | CatalogItem        | Skeleton |
+| Endpoint                    | Entidad            | Estado   | Service                   |
+| --------------------------- | ------------------ | -------- | ------------------------- |
+| `/api/shipments`            | Shipment           | Services | ShipmentService           |
+| `/api/shipment-items`       | ShipmentItem       | Services | ShipmentItemService       |
+| `/api/shipment-checkpoints` | ShipmentCheckpoint | Services | ShipmentCheckpointService |
+| `/api/shipment-documents`   | ShipmentDocument   | Services | ShipmentDocumentService   |
+| `/api/catalog-items`        | CatalogItem        | Services | CatalogItemService        |
 
 ### Network Layer
 
 Gestion de red logistica Hub and Spoke.
 
-| Endpoint                | Entidad        | Estado   |
-| ----------------------- | -------------- | -------- |
-| `/api/network-links`    | NetworkLink    | Skeleton |
-| `/api/route-blueprints` | RouteBlueprint | Skeleton |
-| `/api/route-steps`      | RouteStep      | Skeleton |
+| Endpoint                | Entidad        | Estado   | Service      |
+| ----------------------- | -------------- | -------- | ------------ |
+| `/api/network-links`    | NetworkLink    | Skeleton | -            |
+| `/api/route-blueprints` | RouteBlueprint | Services | RouteService |
+| `/api/route-steps`      | RouteStep      | Skeleton | -            |
+
+---
+
+## Services Layer (v0.5.2)
+
+Capa de servicios que encapsula logica de negocio.
+
+### Interfaces Base
+
+| Interfaz             | Descripcion                               |
+| -------------------- | ----------------------------------------- |
+| `IGenericService<T>` | CRUD generico con paginacion y DTOs       |
+| `ITenantService`     | Extiende IGenericService para Tenants     |
+| `IUserService`       | Validacion de credenciales, cambio passwd |
+| `IShipmentService`   | Tracking, asignacion, estatus             |
+
+### Implementaciones por Capa
+
+| Capa     | Services                                              |
+| -------- | ----------------------------------------------------- |
+| Core     | Tenant, User, Role, Employee, Client                  |
+| Shipment | Shipment, ShipmentItem, Checkpoint, Document, Catalog |
+| Fleet    | Driver, Truck, FleetLog                               |
+| Network  | Location, Route                                       |
 
 ---
 
@@ -84,15 +108,6 @@ Infraestructura base para operaciones CRUD y transacciones.
 | `IGenericRepository<T>` | `GenericRepository` | CRUD generico con soft delete    |
 | `ITenantRepository<T>`  | `TenantRepository`  | Filtrado automatico por TenantId |
 | `IUnitOfWork`           | `UnitOfWork`        | Coordinacion de transacciones    |
-
-### DTOs Comunes
-
-| DTO               | Uso                                       |
-| ----------------- | ----------------------------------------- |
-| `PagedRequest`    | Paginacion con Sort, Search, ActiveOnly   |
-| `PagedResult<T>`  | Respuesta con TotalPages, HasNext, etc    |
-| `BaseDto`         | Campos comunes (Id, CreatedAt, UpdatedAt) |
-| `OperationResult` | Respuestas estandarizadas                 |
 
 ---
 

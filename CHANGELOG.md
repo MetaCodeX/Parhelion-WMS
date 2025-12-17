@@ -4,6 +4,47 @@ Historial de cambios del proyecto Parhelion Logistics.
 
 ---
 
+## [0.5.2] - 2025-12-17
+
+### Agregado
+
+- **Services Layer (16 interfaces, 15 implementaciones)**:
+
+  - `IGenericService<T>` - Interfaz base con operaciones CRUD genericas
+  - **Core Services**: TenantService, UserService, RoleService, EmployeeService, ClientService
+  - **Shipment Services**: ShipmentService, ShipmentItemService, ShipmentCheckpointService, ShipmentDocumentService, CatalogItemService
+  - **Fleet Services**: DriverService, TruckService, FleetLogService
+  - **Network Services**: LocationService, RouteService
+
+- **Refactorizacion de Controllers**:
+
+  - TenantsController, UsersController, RolesController, EmployeesController, ClientsController, ShipmentsController
+  - Controllers ahora usan Service interfaces en lugar de acceso directo a DbContext
+  - Cumplimiento estricto de Clean Architecture
+
+- **Nuevos Endpoints en ShipmentsController**:
+
+  - `GET /api/shipments/by-tracking/{trackingNumber}` - Busqueda por tracking number
+  - `GET /api/shipments/by-status/{status}` - Filtrado por estatus
+  - `GET /api/shipments/by-driver/{driverId}` - Envios por chofer
+  - `GET /api/shipments/by-location/{locationId}` - Envios por ubicacion
+  - `PATCH /api/shipments/{id}/assign` - Asignacion de chofer y camion
+  - `PATCH /api/shipments/{id}/status` - Actualizacion de estatus
+
+### Modificado
+
+- **Dependency Injection**: Registro de 15 Services en Program.cs organizado por capas
+- **Program.cs**: Estructura clara con secciones Core, Shipment, Fleet, Network
+
+### Notas Tecnicas
+
+- Services Layer encapsula logica de negocio y validaciones
+- Controllers reducidos a thin wrappers (delegacion a Services)
+- IUnitOfWork se inyecta en Services para coordinacion de repositorios
+- Preparacion para implementacion de tests de integracion en v0.5.3
+
+---
+
 ## [0.5.1] - 2025-12-16
 
 ### Agregado
