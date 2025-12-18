@@ -101,6 +101,23 @@ public class ServiceTestFixture : IDisposable
         };
         context.Locations.Add(location);
 
+        // Location 2 (for network tests)
+        var location2 = new Domain.Entities.Location
+        {
+            Id = ids.Location2Id,
+            TenantId = ids.TenantId,
+            Code = "GDL",
+            Name = "Guadalajara Hub",
+            Type = Domain.Enums.LocationType.RegionalHub,
+            FullAddress = "456 Test Blvd",
+            CanReceive = true,
+            CanDispatch = true,
+            IsInternal = true,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+        context.Locations.Add(location2);
+
         // Employee
         var employee = new Domain.Entities.Employee
         {
@@ -131,6 +148,64 @@ public class ServiceTestFixture : IDisposable
         };
         context.Trucks.Add(truck);
 
+        // ========== WMS DATA ==========
+        
+        // WarehouseZone
+        var zone = new Domain.Entities.WarehouseZone
+        {
+            Id = ids.ZoneId,
+            LocationId = ids.LocationId,
+            Code = "A1",
+            Name = "Zona A1 - Recepción",
+            Type = Domain.Enums.WarehouseZoneType.Receiving,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+        context.WarehouseZones.Add(zone);
+
+        // CatalogItem (Product)
+        var product = new Domain.Entities.CatalogItem
+        {
+            Id = ids.ProductId,
+            TenantId = ids.TenantId,
+            Sku = "PROD-001",
+            Name = "Test Product",
+            Description = "Test product description",
+            DefaultWeightKg = 5.0m,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+        context.CatalogItems.Add(product);
+
+        // InventoryStock
+        var stock = new Domain.Entities.InventoryStock
+        {
+            Id = ids.StockId,
+            TenantId = ids.TenantId,
+            ZoneId = ids.ZoneId,
+            ProductId = ids.ProductId,
+            Quantity = 100,
+            QuantityReserved = 10,
+            BatchNumber = "LOT-001",
+            ExpiryDate = DateTime.UtcNow.AddMonths(6),
+            CreatedAt = DateTime.UtcNow
+        };
+        context.InventoryStocks.Add(stock);
+
+        // RouteBlueprint
+        var route = new Domain.Entities.RouteBlueprint
+        {
+            Id = ids.RouteId,
+            TenantId = ids.TenantId,
+            Name = "MTY-GDL Express",
+            Description = "Ruta directa Monterrey-Guadalajara",
+            TotalSteps = 2,
+            TotalTransitTime = TimeSpan.FromHours(8),
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+        context.RouteBlueprints.Add(route);
+
         context.SaveChanges();
         return ids;
     }
@@ -148,6 +223,13 @@ public class TestIds
     public Guid AdminRoleId { get; } = Guid.Parse("11111111-1111-1111-1111-111111111111");
     public Guid DriverRoleId { get; } = Guid.Parse("22222222-2222-2222-2222-222222222222");
     public Guid LocationId { get; } = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
+    public Guid Location2Id { get; } = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccd");
     public Guid EmployeeId { get; } = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd");
     public Guid TruckId { get; } = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
+    // WMS IDs
+    public Guid ZoneId { get; } = Guid.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff");
+    public Guid ProductId { get; } = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab");
+    public Guid StockId { get; } = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaac");
+    public Guid RouteId { get; } = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaad");
 }
+

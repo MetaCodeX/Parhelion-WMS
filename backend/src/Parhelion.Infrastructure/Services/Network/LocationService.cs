@@ -30,13 +30,17 @@ public class LocationService : ILocationService
 
     public async Task<OperationResult<LocationResponse>> CreateAsync(CreateLocationRequest request, CancellationToken cancellationToken = default)
     {
+        // Validate airport-style code format
+        if (!IsValidAirportCode(request.Code))
+            return OperationResult<LocationResponse>.Fail("Código debe ser 2-4 caracteres mayúsculas (ej: MTY, GDL, MM)");
+
         if (!Enum.TryParse<LocationType>(request.Type, out var locationType))
             return OperationResult<LocationResponse>.Fail("Tipo de ubicación inválido");
 
         var entity = new Location
         {
             Id = Guid.NewGuid(),
-            Code = request.Code,
+            Code = request.Code.ToUpperInvariant(),
             Name = request.Name,
             Type = locationType,
             FullAddress = request.FullAddress,
@@ -115,6 +119,15 @@ public class LocationService : ILocationService
         var (items, totalCount) = await _unitOfWork.Locations.GetPagedAsync(request, filter: l => l.TenantId == tenantId && (l.Name.ToLower().Contains(term) || l.Code.ToLower().Contains(term)), orderBy: q => q.OrderBy(l => l.Name), cancellationToken);
         return PagedResult<LocationResponse>.From(items.Select(MapToResponse), totalCount, request);
     }
+
+    /// <summary>
+    /// Validates airport-style location code format (2-4 uppercase letters).
+    /// Examples: MTY, GDL, MM, CDMX
+    /// </summary>
+    private static bool IsValidAirportCode(string? code) =>
+        !string.IsNullOrEmpty(code) && 
+        code.Length >= 2 && code.Length <= 4 && 
+        code.All(c => char.IsLetter(c));
 
     private static LocationResponse MapToResponse(Location e) => new(e.Id, e.Code, e.Name, e.Type.ToString(), e.FullAddress, e.Latitude, e.Longitude, e.CanReceive, e.CanDispatch, e.IsInternal, e.IsActive, e.CreatedAt, e.UpdatedAt);
 }

@@ -12,7 +12,7 @@
 
 Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona inventarios, flotas tipificadas, redes Hub & Spoke y documentación legal (Carta Porte) en un entorno Multi-tenant.
 
-> **Estado:** Development Preview v0.5.4 - Swagger/OpenAPI + Business Logic
+> **Estado:** Development Preview v0.5.5 - Business Rules + WMS/TMS Services
 
 ---
 
@@ -31,31 +31,31 @@ Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona in
 - [x] Documentacion de requerimientos y esquema de base de datos
 - [x] **Arquitectura Base:** Configuracion de Clean Architecture y estructura de proyecto
 - [x] **Multi-tenancy:** Query Filters globales por TenantId
-- [x] **Domain Layer:** 14 entidades + 11 enumeraciones
+- [x] **Domain Layer:** 23 entidades + 15 enumeraciones
 - [x] **Infrastructure Layer:** EF Core + PostgreSQL + Migrations
 - [x] **API Skeleton:** 22 endpoints base para todas las entidades
 - [x] **Autenticacion:** JWT con roles SuperAdmin/Admin/Driver/Warehouse
 - [x] **Repository Pattern:** GenericRepository + UnitOfWork + Soft Delete
-- [x] **xUnit Tests:** 72 tests (foundation + services integration)
-- [x] **Services Layer:** 16 interfaces, 15 implementaciones (Core, Shipment, Fleet, Network)
+- [x] **xUnit Tests:** 122 tests (foundation + services + business rules)
+- [x] **Services Layer:** 22 servicios (Core, Shipment, Fleet, Network, Warehouse)
 
 ### Gestion de Flotilla
 
-- [ ] **Camiones Tipificados:** DryBox, Refrigerado, HAZMAT, Plataforma, Blindado
-- [ ] **Choferes:** Asignacion fija (default_truck) y dinamica (current_truck)
-- [ ] **Bitacora de Flotilla:** Historial de cambios de vehiculo (FleetLog)
+- [x] **Camiones Tipificados:** DryBox, Refrigerado, HAZMAT, Plataforma, Blindado
+- [x] **Choferes:** Asignacion fija (default_truck) y dinamica (current_truck)
+- [x] **Bitacora de Flotilla:** Historial de cambios de vehiculo (FleetLog automático)
 
 ### Red Logistica (Hub and Spoke)
 
-- [ ] **Nodos de Red:** RegionalHub, CrossDock, Warehouse, Store, SupplierPlant
-- [ ] **Codigos Aeroportuarios:** Identificadores unicos por ubicacion (MTY, GDL, MM)
-- [ ] **Enlaces de Red:** Conexiones FirstMile, LineHaul, LastMile
-- [ ] **Rutas Predefinidas:** RouteBlueprint con paradas y tiempos de transito
+- [x] **Nodos de Red:** RegionalHub, CrossDock, Warehouse, Store, SupplierPlant
+- [x] **Codigos Aeroportuarios:** Identificadores unicos por ubicacion (MTY, GDL, MM)
+- [x] **Enlaces de Red:** Conexiones FirstMile, LineHaul, LastMile
+- [x] **Rutas Predefinidas:** RouteBlueprint con paradas y tiempos de transito
 
 ### Envios y Trazabilidad
 
-- [ ] **Manifiesto de Carga:** Items con peso volumetrico y valor declarado
-- [ ] **Restricciones de Compatibilidad:** Cadena de frio, HAZMAT, Alto valor
+- [x] **Manifiesto de Carga:** Items con peso volumetrico y valor declarado
+- [x] **Restricciones de Compatibilidad:** Cadena de frio, HAZMAT, Alto valor (validador automatico)
 - [ ] **Checkpoints:** Bitacora de eventos (Loaded, QrScanned, ArrivedHub, Delivered)
 - [ ] **QR Handshake:** Transferencia de custodia digital mediante escaneo
 
@@ -233,6 +233,35 @@ src/
 | :-------------- | :-------------------- |
 | **API Backend** | `api.macrostasis.lat` |
 | **Frontend**    | `macrostasis.lat`     |
+
+---
+
+## Roadmap
+
+### Completado
+
+| Version    | Fecha       | Descripcion                                                 |
+| ---------- | ----------- | ----------------------------------------------------------- |
+| v0.1.0     | 2025-12     | Estructura inicial, documentación de requerimientos         |
+| v0.2.0     | 2025-12     | Domain Layer: Entidades base y enumeraciones                |
+| v0.3.0     | 2025-12     | Infrastructure Layer: EF Core, PostgreSQL, Migrations       |
+| v0.4.0     | 2025-12     | API Layer: Controllers base, JWT Authentication             |
+| v0.5.0     | 2025-12     | Services Layer: Repository Pattern, UnitOfWork              |
+| v0.5.1     | 2025-12     | Foundation Tests: DTOs, Repository, UnitOfWork              |
+| v0.5.2     | 2025-12     | Services Implementation: 16 interfaces, 15 implementaciones |
+| v0.5.3     | 2025-12     | Integration Tests: 72 tests para Services                   |
+| v0.5.4     | 2025-12     | Swagger/OpenAPI, Business Logic Workflow                    |
+| **v0.5.5** | **2025-12** | **WMS/TMS Services, Business Rules, 122 tests**             |
+
+### Próximas Versiones
+
+| Version    | Objetivo              | Características                                |
+| ---------- | --------------------- | ---------------------------------------------- |
+| v0.5.6     | Trazabilidad          | Endpoints de Checkpoints, Upload de documentos |
+| v0.5.7     | QR Handshake          | Transferencia de custodia digital              |
+| v0.5.8     | Rutas                 | Asignación de rutas, avance por pasos          |
+| v0.5.9     | Dashboard             | KPIs operativos, métricas por status           |
+| **v0.6.0** | **Perfeccionamiento** | **Bug fixes, E2E testing, optimización**       |
 
 ---
 

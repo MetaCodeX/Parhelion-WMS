@@ -4,6 +4,61 @@ Historial de cambios del proyecto Parhelion Logistics.
 
 ---
 
+## [0.5.5] - 2025-12-18
+
+### Agregado
+
+- **WMS Services Layer (4 servicios)**:
+
+  - `WarehouseZoneService` - Gestión de zonas de almacén
+  - `WarehouseOperatorService` - Gestión de almacenistas
+  - `InventoryStockService` - Stock con reserva/liberación
+  - `InventoryTransactionService` - Kardex de movimientos (Receipt, Dispatch, Transfer)
+
+- **TMS Network Services (2 servicios)**:
+
+  - `NetworkLinkService` - Enlaces bidireccionales entre nodos
+  - `RouteStepService` - Pasos de ruta con reordenamiento automático
+
+- **Business Rules Validators**:
+
+  - `ICargoCompatibilityValidator` - Interface de validación carga-camión
+  - `CargoCompatibilityValidator` - Implementación con reglas:
+    - Cargo refrigerado → Truck Refrigerated
+    - Cargo HAZMAT → Truck HazmatTank
+    - Cargo alto valor (>$500K) → Truck Armored
+
+- **Automatic FleetLog Generation**:
+
+  - `DriverService.AssignTruckAsync` ahora genera FleetLog automáticamente
+  - Audit trail completo de cambios de camión
+
+- **Airport Code Validation**:
+
+  - `LocationService.CreateAsync` valida formato 2-4 letras (MTY, GDL, MM)
+  - Normalización automática a mayúsculas
+
+- **Tests (50 nuevos, total: 122)**:
+
+  - Unit tests para WMS services (15)
+  - Unit tests para Network services (10)
+  - Integration tests WMS/Fleet/Network (13)
+  - CargoCompatibilityValidator tests (12)
+
+### Modificado
+
+- `ShipmentService.AssignToDriverAsync` - Ahora valida compatibilidad carga-camión
+- `Program.cs` - Registro de todos los nuevos servicios en DI
+- `ServiceTestFixture` - Datos seed para WMS (Zone, CatalogItem, InventoryStock)
+
+### Notas Técnicas
+
+- Validators registrados como Singleton (stateless)
+- Services registrados como Scoped
+- Todas las validaciones son fail-safe con mensajes descriptivos
+
+---
+
 ## [0.5.4] - 2025-12-18
 
 ### Agregado

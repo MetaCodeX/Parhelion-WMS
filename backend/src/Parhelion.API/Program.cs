@@ -137,6 +137,24 @@ builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.ILocationSe
     Parhelion.Infrastructure.Services.Network.LocationService>();
 builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IRouteService, 
     Parhelion.Infrastructure.Services.Network.RouteService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.INetworkLinkService, 
+    Parhelion.Infrastructure.Services.Network.NetworkLinkService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IRouteStepService, 
+    Parhelion.Infrastructure.Services.Network.RouteStepService>();
+
+// ========== WAREHOUSE LAYER SERVICES ==========
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IWarehouseZoneService, 
+    Parhelion.Infrastructure.Services.Warehouse.WarehouseZoneService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IWarehouseOperatorService, 
+    Parhelion.Infrastructure.Services.Warehouse.WarehouseOperatorService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IInventoryStockService, 
+    Parhelion.Infrastructure.Services.Warehouse.InventoryStockService>();
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IInventoryTransactionService, 
+    Parhelion.Infrastructure.Services.Warehouse.InventoryTransactionService>();
+
+// ========== VALIDATORS ==========
+builder.Services.AddSingleton<Parhelion.Application.Interfaces.Validators.ICargoCompatibilityValidator, 
+    Parhelion.Infrastructure.Validators.CargoCompatibilityValidator>();
 
 // ========== JWT AUTHENTICATION ==========
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 

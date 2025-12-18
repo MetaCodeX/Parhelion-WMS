@@ -145,11 +145,31 @@ public class DriverService : IDriverService
         var truck = await _unitOfWork.Trucks.GetByIdAsync(truckId, cancellationToken);
         if (truck == null) return OperationResult<DriverResponse>.Fail("Camión no encontrado");
 
+        // Store old truck for FleetLog
+        var oldTruckId = entity.CurrentTruckId;
+
+        // Update driver's current truck
         entity.CurrentTruckId = truckId;
         entity.UpdatedAt = DateTime.UtcNow;
         _unitOfWork.Drivers.Update(entity);
+
+        // Auto-generate FleetLog for audit trail
+        var fleetLog = new FleetLog
+        {
+            Id = Guid.NewGuid(),
+            TenantId = truck.TenantId,
+            DriverId = driverId,
+            OldTruckId = oldTruckId,
+            NewTruckId = truckId,
+            Reason = FleetLogReason.Reassignment,
+            Timestamp = DateTime.UtcNow,
+            CreatedByUserId = Guid.Empty, // TODO: Inject from CurrentUserService
+            CreatedAt = DateTime.UtcNow
+        };
+        await _unitOfWork.FleetLogs.AddAsync(fleetLog, cancellationToken);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        return OperationResult<DriverResponse>.Ok(await MapToResponseAsync(entity, cancellationToken), "Camión asignado exitosamente");
+        return OperationResult<DriverResponse>.Ok(await MapToResponseAsync(entity, cancellationToken), "Camión asignado exitosamente (FleetLog generado)");
     }
 
     private async Task<DriverResponse> MapToResponseAsync(Driver e, CancellationToken ct)

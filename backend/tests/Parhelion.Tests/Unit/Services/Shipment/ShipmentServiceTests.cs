@@ -1,6 +1,7 @@
 using Parhelion.Application.DTOs.Common;
 using Parhelion.Application.DTOs.Shipment;
 using Parhelion.Infrastructure.Services.Shipment;
+using Parhelion.Infrastructure.Validators;
 using Parhelion.Tests.Fixtures;
 using Xunit;
 
@@ -12,6 +13,7 @@ namespace Parhelion.Tests.Unit.Services.Shipment;
 public class ShipmentServiceTests : IClassFixture<ServiceTestFixture>
 {
     private readonly ServiceTestFixture _fixture;
+    private readonly CargoCompatibilityValidator _cargoValidator = new();
 
     public ShipmentServiceTests(ServiceTestFixture fixture) => _fixture = fixture;
 
@@ -20,7 +22,7 @@ public class ShipmentServiceTests : IClassFixture<ServiceTestFixture>
     {
         // Arrange
         var (uow, ctx) = _fixture.CreateUnitOfWork();
-        var service = new ShipmentService(uow);
+        var service = new ShipmentService(uow, _cargoValidator);
         var request = new PagedRequest { Page = 1, PageSize = 10 };
 
         // Act
@@ -35,7 +37,7 @@ public class ShipmentServiceTests : IClassFixture<ServiceTestFixture>
     {
         // Arrange
         var (uow, ctx) = _fixture.CreateUnitOfWork();
-        var service = new ShipmentService(uow);
+        var service = new ShipmentService(uow, _cargoValidator);
 
         // Act
         var result = await service.GetByIdAsync(Guid.NewGuid());
@@ -49,7 +51,7 @@ public class ShipmentServiceTests : IClassFixture<ServiceTestFixture>
     {
         // Arrange
         var (uow, ctx) = _fixture.CreateUnitOfWork();
-        var service = new ShipmentService(uow);
+        var service = new ShipmentService(uow, _cargoValidator);
 
         // Act
         var exists = await service.ExistsAsync(Guid.NewGuid());
@@ -58,3 +60,4 @@ public class ShipmentServiceTests : IClassFixture<ServiceTestFixture>
         Assert.False(exists);
     }
 }
+

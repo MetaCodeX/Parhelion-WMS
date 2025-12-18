@@ -4,8 +4,8 @@ Documentacion tecnica de la estructura API-First del backend Parhelion.
 
 ## Estado Actual
 
-**Version:** 0.5.4  
-**Enfoque:** Swagger/OpenAPI + Business Logic  
+**Version:** 0.5.5  
+**Enfoque:** WMS/TMS Services + Business Rules  
 **Arquitectura:** Clean Architecture + Domain-Driven Design
 
 ---
@@ -30,13 +30,13 @@ Gestion de identidad, usuarios y estructura organizacional.
 
 Gestion de almacenes, zonas e inventario.
 
-| Endpoint                      | Entidad              | Estado   | Service         |
-| ----------------------------- | -------------------- | -------- | --------------- |
-| `/api/locations`              | Location             | Services | LocationService |
-| `/api/warehouse-zones`        | WarehouseZone        | Skeleton | -               |
-| `/api/warehouse-operators`    | WarehouseOperator    | Skeleton | -               |
-| `/api/inventory-stocks`       | InventoryStock       | Skeleton | -               |
-| `/api/inventory-transactions` | InventoryTransaction | Skeleton | -               |
+| Endpoint                      | Entidad              | Estado   | Service                     |
+| ----------------------------- | -------------------- | -------- | --------------------------- |
+| `/api/locations`              | Location             | Services | LocationService             |
+| `/api/warehouse-zones`        | WarehouseZone        | Services | WarehouseZoneService        |
+| `/api/warehouse-operators`    | WarehouseOperator    | Services | WarehouseOperatorService    |
+| `/api/inventory-stocks`       | InventoryStock       | Services | InventoryStockService       |
+| `/api/inventory-transactions` | InventoryTransaction | Services | InventoryTransactionService |
 
 ### Fleet Layer
 
@@ -65,11 +65,11 @@ Gestion de envios, items y trazabilidad.
 
 Gestion de red logistica Hub and Spoke.
 
-| Endpoint                | Entidad        | Estado   | Service      |
-| ----------------------- | -------------- | -------- | ------------ |
-| `/api/network-links`    | NetworkLink    | Skeleton | -            |
-| `/api/route-blueprints` | RouteBlueprint | Services | RouteService |
-| `/api/route-steps`      | RouteStep      | Skeleton | -            |
+| Endpoint                | Entidad        | Estado   | Service            |
+| ----------------------- | -------------- | -------- | ------------------ |
+| `/api/network-links`    | NetworkLink    | Services | NetworkLinkService |
+| `/api/route-blueprints` | RouteBlueprint | Services | RouteService       |
+| `/api/route-steps`      | RouteStep      | Services | RouteStepService   |
 
 ---
 
@@ -88,12 +88,13 @@ Capa de servicios que encapsula logica de negocio.
 
 ### Implementaciones por Capa
 
-| Capa     | Services                                              |
-| -------- | ----------------------------------------------------- |
-| Core     | Tenant, User, Role, Employee, Client                  |
-| Shipment | Shipment, ShipmentItem, Checkpoint, Document, Catalog |
-| Fleet    | Driver, Truck, FleetLog                               |
-| Network  | Location, Route                                       |
+| Capa      | Services                                                               |
+| --------- | ---------------------------------------------------------------------- |
+| Core      | Tenant, User, Role, Employee, Client                                   |
+| Shipment  | Shipment, ShipmentItem, Checkpoint, Document, Catalog                  |
+| Fleet     | Driver, Truck, FleetLog                                                |
+| Network   | Location, Route, NetworkLink, RouteStep                                |
+| Warehouse | WarehouseZone, WarehouseOperator, InventoryStock, InventoryTransaction |
 
 ---
 

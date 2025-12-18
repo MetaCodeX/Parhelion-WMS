@@ -3,6 +3,7 @@ using Parhelion.Application.DTOs.Common;
 using Parhelion.Application.DTOs.Shipment;
 using Parhelion.Application.Interfaces;
 using Parhelion.Application.Interfaces.Services;
+using Parhelion.Application.Interfaces.Validators;
 using Parhelion.Domain.Entities;
 using Parhelion.Domain.Enums;
 
@@ -15,11 +16,14 @@ namespace Parhelion.Infrastructure.Services.Shipment;
 public class ShipmentService : IShipmentService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICargoCompatibilityValidator _cargoValidator;
 
-    public ShipmentService(IUnitOfWork unitOfWork)
+    public ShipmentService(IUnitOfWork unitOfWork, ICargoCompatibilityValidator cargoValidator)
     {
         _unitOfWork = unitOfWork;
+        _cargoValidator = cargoValidator;
     }
+
 
     public async Task<PagedResult<ShipmentResponse>> GetAllAsync(
         PagedRequest request, CancellationToken cancellationToken = default)
@@ -156,6 +160,15 @@ public class ShipmentService : IShipmentService
         var truck = await _unitOfWork.Trucks.GetByIdAsync(truckId, cancellationToken);
         if (truck == null) return OperationResult<ShipmentResponse>.Fail("Camión no encontrado");
 
+        // Validate cargo-truck compatibility
+        var items = await _unitOfWork.ShipmentItems.FindAsync(i => i.ShipmentId == shipmentId, cancellationToken);
+        var validation = _cargoValidator.ValidateShipmentForTruck(items, truck.Type);
+        if (!validation.IsValid)
+        {
+            var requiredType = validation.RequiredTruckType?.ToString() ?? "compatible";
+            return OperationResult<ShipmentResponse>.Fail($"{validation.ErrorMessage} (Requerido: {requiredType}, Asignado: {truck.Type})");
+        }
+
         entity.DriverId = driverId;
         entity.TruckId = truckId;
         entity.AssignedAt = DateTime.UtcNow;
@@ -166,6 +179,7 @@ public class ShipmentService : IShipmentService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return OperationResult<ShipmentResponse>.Ok(await MapToResponseAsync(entity, cancellationToken), "Envío asignado exitosamente");
     }
+
 
     public async Task<OperationResult<ShipmentResponse>> UpdateStatusAsync(Guid shipmentId, ShipmentStatus newStatus, CancellationToken cancellationToken = default)
     {
