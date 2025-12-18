@@ -4,6 +4,47 @@ Historial de cambios del proyecto Parhelion Logistics.
 
 ---
 
+## [0.5.4] - 2025-12-18
+
+### Agregado
+
+- **Swagger/OpenAPI Documentation**:
+
+  - OpenAPI Info con version, titulo, descripcion, contacto
+  - JWT Bearer Security Scheme con autorizacion
+  - XML Comments habilitados para documentacion automatica
+  - Atributos `[Produces]` y `[Consumes]` en Controllers
+
+- **Business Logic - Shipment Workflow**:
+  - Validación de transiciones de estado (`ValidateStatusTransition`)
+  - Workflow: PendingApproval → Approved → Loaded → InTransit → AtHub/OutForDelivery → Delivered
+  - Estado Exception para manejo de problemas con recuperación
+
+### Modificado
+
+- **Controllers Refactorizados (5 total)**:
+
+  - `TrucksController` → `ITruckService`
+  - `DriversController` → `IDriverService`
+  - `FleetLogsController` → `IFleetLogService`
+  - `LocationsController` → `ILocationService`
+  - `RouteBlueprintsController` → `IRouteService`
+
+- **Nuevos Endpoints**:
+  - `PATCH /api/drivers/{id}/assign-truck` - Asignar camión a chofer
+  - `PATCH /api/drivers/{id}/status` - Actualizar estatus de chofer
+  - `POST /api/fleet-logs/start-usage` - Iniciar uso de camión
+  - `POST /api/fleet-logs/end-usage` - Finalizar uso de camión
+  - `GET /api/route-blueprints/{id}/steps` - Obtener pasos de ruta
+
+### Notas Tecnicas
+
+- Controllers ahora son thin wrappers que delegan a Services
+- Validación de workflow previene transiciones inválidas de estado
+- Preparación para tests de Business Logic en v0.5.5
+
+---
+
 ## [0.5.3] - 2025-12-18
 
 ### Agregado

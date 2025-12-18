@@ -9,10 +9,13 @@ namespace Parhelion.API.Controllers;
 
 /// <summary>
 /// Controlador para gestión de envíos.
+/// Endpoints para CRUD, tracking, asignación y workflow de estados.
 /// </summary>
 [ApiController]
 [Route("api/shipments")]
 [Authorize]
+[Produces("application/json")]
+[Consumes("application/json")]
 public class ShipmentsController : ControllerBase
 {
     private readonly IShipmentService _shipmentService;

@@ -172,13 +172,60 @@ public class ShipmentService : IShipmentService
         var entity = await _unitOfWork.Shipments.GetByIdAsync(shipmentId, cancellationToken);
         if (entity == null) return OperationResult<ShipmentResponse>.Fail("Envío no encontrado");
 
+        // Validate status transition
+        var validationResult = ValidateStatusTransition(entity.Status, newStatus);
+        if (!validationResult.IsValid)
+            return OperationResult<ShipmentResponse>.Fail(validationResult.ErrorMessage!);
+
         entity.Status = newStatus;
         entity.UpdatedAt = DateTime.UtcNow;
-        if (newStatus == ShipmentStatus.Delivered) entity.DeliveredAt = DateTime.UtcNow;
+        
+        // Set DeliveredAt when status changes to Delivered
+        if (newStatus == ShipmentStatus.Delivered) 
+            entity.DeliveredAt = DateTime.UtcNow;
 
         _unitOfWork.Shipments.Update(entity);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return OperationResult<ShipmentResponse>.Ok(await MapToResponseAsync(entity, cancellationToken), $"Estado actualizado a {newStatus}");
+    }
+
+    /// <summary>
+    /// Validates if a status transition is allowed based on business rules.
+    /// Valid transitions:
+    /// PendingApproval → Approved, Exception
+    /// Approved → Loaded, Exception
+    /// Loaded → InTransit, Exception
+    /// InTransit → AtHub, OutForDelivery, Exception
+    /// AtHub → InTransit, OutForDelivery, Exception
+    /// OutForDelivery → Delivered, Exception
+    /// Exception → Any previous state (recovery)
+    /// </summary>
+    private static (bool IsValid, string? ErrorMessage) ValidateStatusTransition(ShipmentStatus current, ShipmentStatus next)
+    {
+        if (current == next)
+            return (true, null); // No change is always valid
+
+        // From Exception, can go to any state (recovery)
+        if (current == ShipmentStatus.Exception)
+            return (true, null);
+
+        // Cannot go backwards in workflow (except from Exception)
+        var validTransitions = current switch
+        {
+            ShipmentStatus.PendingApproval => new[] { ShipmentStatus.Approved, ShipmentStatus.Exception },
+            ShipmentStatus.Approved => new[] { ShipmentStatus.Loaded, ShipmentStatus.Exception },
+            ShipmentStatus.Loaded => new[] { ShipmentStatus.InTransit, ShipmentStatus.Exception },
+            ShipmentStatus.InTransit => new[] { ShipmentStatus.AtHub, ShipmentStatus.OutForDelivery, ShipmentStatus.Exception },
+            ShipmentStatus.AtHub => new[] { ShipmentStatus.InTransit, ShipmentStatus.OutForDelivery, ShipmentStatus.Exception },
+            ShipmentStatus.OutForDelivery => new[] { ShipmentStatus.Delivered, ShipmentStatus.AtHub, ShipmentStatus.Exception },
+            ShipmentStatus.Delivered => new[] { ShipmentStatus.Exception }, // Delivered is final, only Exception allowed
+            _ => Array.Empty<ShipmentStatus>()
+        };
+
+        if (!validTransitions.Contains(next))
+            return (false, $"Transición de estado inválida: {current} → {next}. Estados válidos: {string.Join(", ", validTransitions)}");
+
+        return (true, null);
     }
 
     private static string GenerateTrackingNumber() => $"PAR-{DateTime.UtcNow:yyyyMMddHHmmss}-{new Random().Next(1000, 9999)}";

@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Parhelion.Application.DTOs.Common;
 using Parhelion.Application.DTOs.Warehouse;
-using Parhelion.Domain.Entities;
+using Parhelion.Application.Interfaces.Services;
 using Parhelion.Domain.Enums;
-using Parhelion.Infrastructure.Data;
 
 namespace Parhelion.API.Controllers;
 
@@ -16,115 +15,82 @@ namespace Parhelion.API.Controllers;
 [Authorize]
 public class LocationsController : ControllerBase
 {
-    private readonly ParhelionDbContext _context;
+    private readonly ILocationService _locationService;
 
-    public LocationsController(ParhelionDbContext context)
+    public LocationsController(ILocationService locationService)
     {
-        _context = context;
+        _locationService = locationService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LocationResponse>>> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] PagedRequest request)
     {
-        var items = await _context.Locations
-            .Where(x => !x.IsDeleted)
-            .OrderBy(x => x.Code)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var result = await _locationService.GetAllAsync(request);
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<LocationResponse>> GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id)
     {
-        var item = await _context.Locations.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Ubicación no encontrada" });
-        return Ok(MapToResponse(item));
+        var result = await _locationService.GetByIdAsync(id);
+        if (result == null) return NotFound(new { error = "Ubicación no encontrada" });
+        return Ok(result);
     }
 
     [HttpGet("by-type/{type}")]
-    public async Task<ActionResult<IEnumerable<LocationResponse>>> ByType(string type)
+    public async Task<IActionResult> ByType(string type, [FromQuery] PagedRequest request)
     {
         if (!Enum.TryParse<LocationType>(type, out var locType))
             return BadRequest(new { error = "Tipo de ubicación inválido" });
 
-        var items = await _context.Locations
-            .Where(x => !x.IsDeleted && x.Type == locType)
-            .OrderBy(x => x.Code)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var tenantId = GetTenantId();
+        if (tenantId == null) return Unauthorized(new { error = "No se pudo determinar el tenant" });
+
+        var result = await _locationService.GetByTypeAsync(tenantId.Value, locType, request);
+        return Ok(result);
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> Search([FromQuery] string name, [FromQuery] PagedRequest request)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == null) return Unauthorized(new { error = "No se pudo determinar el tenant" });
+
+        var result = await _locationService.SearchByNameAsync(tenantId.Value, name, request);
+        return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<LocationResponse>> Create([FromBody] CreateLocationRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateLocationRequest request)
     {
-        var tenantIdClaim = User.FindFirst("tenant_id");
-        if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
-            return Unauthorized(new { error = "No se pudo determinar el tenant" });
-
-        var existing = await _context.Locations.AnyAsync(x => x.Code == request.Code && !x.IsDeleted);
-        if (existing) return Conflict(new { error = $"Ya existe ubicación con código '{request.Code}'" });
-
-        var item = new Location
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            Code = request.Code,
-            Name = request.Name,
-            Type = Enum.TryParse<LocationType>(request.Type, out var t) ? t : LocationType.Warehouse,
-            FullAddress = request.FullAddress,
-            Latitude = request.Latitude,
-            Longitude = request.Longitude,
-            CanReceive = request.CanReceive,
-            CanDispatch = request.CanDispatch,
-            IsInternal = request.IsInternal,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.Locations.Add(item);
-        await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = item.Id }, MapToResponse(item));
+        var result = await _locationService.CreateAsync(request);
+        if (!result.Success)
+            return Conflict(new { error = result.Message });
+        return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<LocationResponse>> Update(Guid id, [FromBody] UpdateLocationRequest request)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateLocationRequest request)
     {
-        var item = await _context.Locations.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Ubicación no encontrada" });
-
-        item.Code = request.Code;
-        item.Name = request.Name;
-        item.Type = Enum.TryParse<LocationType>(request.Type, out var t) ? t : item.Type;
-        item.FullAddress = request.FullAddress;
-        item.Latitude = request.Latitude;
-        item.Longitude = request.Longitude;
-        item.CanReceive = request.CanReceive;
-        item.CanDispatch = request.CanDispatch;
-        item.IsInternal = request.IsInternal;
-        item.IsActive = request.IsActive;
-        item.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-        return Ok(MapToResponse(item));
+        var result = await _locationService.UpdateAsync(id, request);
+        if (!result.Success)
+            return (result.Message?.Contains("no encontrad") ?? false)
+                ? NotFound(new { error = result.Message }) 
+                : BadRequest(new { error = result.Message });
+        return Ok(result.Data);
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var item = await _context.Locations.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Ubicación no encontrada" });
-
-        item.IsDeleted = true;
-        item.DeletedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        var result = await _locationService.DeleteAsync(id);
+        if (!result.Success) return NotFound(new { error = result.Message });
         return NoContent();
     }
 
-    private static LocationResponse MapToResponse(Location x) => new(
-        x.Id, x.Code, x.Name, x.Type.ToString(), x.FullAddress,
-        x.Latitude, x.Longitude, x.CanReceive, x.CanDispatch,
-        x.IsInternal, x.IsActive, x.CreatedAt, x.UpdatedAt
-    );
+    private Guid? GetTenantId()
+    {
+        var claim = User.FindFirst("tenant_id");
+        return claim != null && Guid.TryParse(claim.Value, out var id) ? id : null;
+    }
 }

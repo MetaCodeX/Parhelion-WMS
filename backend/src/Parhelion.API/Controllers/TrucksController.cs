@@ -1,153 +1,115 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Parhelion.Application.DTOs.Common;
 using Parhelion.Application.DTOs.Fleet;
-using Parhelion.Domain.Entities;
+using Parhelion.Application.Interfaces.Services;
 using Parhelion.Domain.Enums;
-using Parhelion.Infrastructure.Data;
 
 namespace Parhelion.API.Controllers;
 
 /// <summary>
-/// Controlador para gestión de camiones.
+/// Controlador para gestión de camiones de la flota.
+/// CRUD completo, búsqueda por placa, filtro por tipo y gestión de estatus.
 /// </summary>
 [ApiController]
 [Route("api/trucks")]
 [Authorize]
+[Produces("application/json")]
+[Consumes("application/json")]
 public class TrucksController : ControllerBase
 {
-    private readonly ParhelionDbContext _context;
+    private readonly ITruckService _truckService;
 
-    public TrucksController(ParhelionDbContext context)
+    public TrucksController(ITruckService truckService)
     {
-        _context = context;
+        _truckService = truckService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TruckResponse>>> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] PagedRequest request)
     {
-        var items = await _context.Trucks
-            .Where(x => !x.IsDeleted)
-            .OrderBy(x => x.Plate)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var result = await _truckService.GetAllAsync(request);
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<TruckResponse>> GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id)
     {
-        var item = await _context.Trucks.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Camión no encontrado" });
-        return Ok(MapToResponse(item));
+        var result = await _truckService.GetByIdAsync(id);
+        if (result == null) return NotFound(new { error = "Camión no encontrado" });
+        return Ok(result);
     }
 
     [HttpGet("available")]
-    public async Task<ActionResult<IEnumerable<TruckResponse>>> Available()
+    public async Task<IActionResult> Available([FromQuery] PagedRequest request)
     {
-        var items = await _context.Trucks
-            .Where(x => !x.IsDeleted && x.IsActive)
-            .OrderBy(x => x.Plate)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var tenantId = GetTenantId();
+        if (tenantId == null) return Unauthorized(new { error = "No se pudo determinar el tenant" });
+
+        var result = await _truckService.GetAvailableAsync(tenantId.Value, request);
+        return Ok(result);
     }
 
     [HttpGet("by-type/{type}")]
-    public async Task<ActionResult<IEnumerable<TruckResponse>>> ByType(string type)
+    public async Task<IActionResult> ByType(string type, [FromQuery] PagedRequest request)
     {
         if (!Enum.TryParse<TruckType>(type, out var truckType))
             return BadRequest(new { error = "Tipo de camión inválido" });
 
-        var items = await _context.Trucks
-            .Where(x => !x.IsDeleted && x.Type == truckType)
-            .OrderBy(x => x.Plate)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var tenantId = GetTenantId();
+        if (tenantId == null) return Unauthorized(new { error = "No se pudo determinar el tenant" });
+
+        var result = await _truckService.GetByTypeAsync(tenantId.Value, truckType, request);
+        return Ok(result);
+    }
+
+    [HttpGet("by-plate/{plate}")]
+    public async Task<IActionResult> ByPlate(string plate)
+    {
+        var result = await _truckService.GetByPlateAsync(plate);
+        if (result == null) return NotFound(new { error = "Camión no encontrado" });
+        return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<TruckResponse>> Create([FromBody] CreateTruckRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateTruckRequest request)
     {
-        var tenantIdClaim = User.FindFirst("tenant_id");
-        if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
-            return Unauthorized(new { error = "No se pudo determinar el tenant" });
-
-        var existing = await _context.Trucks.AnyAsync(x => x.Plate == request.Plate && !x.IsDeleted);
-        if (existing) return Conflict(new { error = $"Ya existe camión con placa '{request.Plate}'" });
-
-        var item = new Truck
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            Plate = request.Plate,
-            Model = request.Model,
-            Type = Enum.TryParse<TruckType>(request.Type, out var t) ? t : TruckType.DryBox,
-            MaxCapacityKg = request.MaxCapacityKg,
-            MaxVolumeM3 = request.MaxVolumeM3,
-            IsActive = true,
-            Vin = request.Vin,
-            EngineNumber = request.EngineNumber,
-            Year = request.Year,
-            Color = request.Color,
-            InsurancePolicy = request.InsurancePolicy,
-            InsuranceExpiration = request.InsuranceExpiration,
-            VerificationNumber = request.VerificationNumber,
-            VerificationExpiration = request.VerificationExpiration,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.Trucks.Add(item);
-        await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = item.Id }, MapToResponse(item));
+        var result = await _truckService.CreateAsync(request);
+        if (!result.Success) 
+            return Conflict(new { error = result.Message });
+        return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<TruckResponse>> Update(Guid id, [FromBody] UpdateTruckRequest request)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTruckRequest request)
     {
-        var item = await _context.Trucks.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Camión no encontrado" });
-
-        item.Plate = request.Plate;
-        item.Model = request.Model;
-        item.Type = Enum.TryParse<TruckType>(request.Type, out var t) ? t : item.Type;
-        item.MaxCapacityKg = request.MaxCapacityKg;
-        item.MaxVolumeM3 = request.MaxVolumeM3;
-        item.IsActive = request.IsActive;
-        item.Vin = request.Vin;
-        item.EngineNumber = request.EngineNumber;
-        item.Year = request.Year;
-        item.Color = request.Color;
-        item.InsurancePolicy = request.InsurancePolicy;
-        item.InsuranceExpiration = request.InsuranceExpiration;
-        item.VerificationNumber = request.VerificationNumber;
-        item.VerificationExpiration = request.VerificationExpiration;
-        item.LastMaintenanceDate = request.LastMaintenanceDate;
-        item.NextMaintenanceDate = request.NextMaintenanceDate;
-        item.CurrentOdometerKm = request.CurrentOdometerKm;
-        item.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-        return Ok(MapToResponse(item));
+        var result = await _truckService.UpdateAsync(id, request);
+        if (!result.Success)
+            return (result.Message?.Contains("no encontrado") ?? false)
+                ? NotFound(new { error = result.Message }) 
+                : BadRequest(new { error = result.Message });
+        return Ok(result.Data);
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var item = await _context.Trucks.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Camión no encontrado" });
-
-        item.IsDeleted = true;
-        item.DeletedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        var result = await _truckService.DeleteAsync(id);
+        if (!result.Success) return NotFound(new { error = result.Message });
         return NoContent();
     }
 
-    private static TruckResponse MapToResponse(Truck x) => new(
-        x.Id, x.Plate, x.Model, x.Type.ToString(), x.MaxCapacityKg, x.MaxVolumeM3, x.IsActive,
-        x.Vin, x.EngineNumber, x.Year, x.Color, x.InsurancePolicy, x.InsuranceExpiration,
-        x.VerificationNumber, x.VerificationExpiration, x.LastMaintenanceDate,
-        x.NextMaintenanceDate, x.CurrentOdometerKm, x.CreatedAt, x.UpdatedAt
-    );
+    [HttpPatch("{id:guid}/status")]
+    public async Task<IActionResult> SetStatus(Guid id, [FromBody] bool isActive)
+    {
+        var result = await _truckService.SetActiveStatusAsync(id, isActive);
+        if (!result.Success) return NotFound(new { error = result.Message });
+        return Ok(result.Data);
+    }
+
+    private Guid? GetTenantId()
+    {
+        var claim = User.FindFirst("tenant_id");
+        return claim != null && Guid.TryParse(claim.Value, out var id) ? id : null;
+    }
 }

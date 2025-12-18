@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Parhelion.Application.DTOs.Common;
 using Parhelion.Application.DTOs.Fleet;
-using Parhelion.Domain.Entities;
-using Parhelion.Domain.Enums;
-using Parhelion.Infrastructure.Data;
+using Parhelion.Application.Interfaces.Services;
 
 namespace Parhelion.API.Controllers;
 
@@ -17,124 +15,64 @@ namespace Parhelion.API.Controllers;
 [Authorize]
 public class FleetLogsController : ControllerBase
 {
-    private readonly ParhelionDbContext _context;
+    private readonly IFleetLogService _fleetLogService;
 
-    public FleetLogsController(ParhelionDbContext context)
+    public FleetLogsController(IFleetLogService fleetLogService)
     {
-        _context = context;
+        _fleetLogService = fleetLogService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<FleetLogResponse>>> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] PagedRequest request)
     {
-        var items = await _context.FleetLogs
-            .Include(x => x.Driver).ThenInclude(d => d.Employee).ThenInclude(e => e.User)
-            .Include(x => x.OldTruck)
-            .Include(x => x.NewTruck)
-            .Include(x => x.CreatedBy)
-            .Where(x => !x.IsDeleted)
-            .OrderByDescending(x => x.Timestamp)
-            .Take(100)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var result = await _fleetLogService.GetAllAsync(request);
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<FleetLogResponse>> GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id)
     {
-        var item = await _context.FleetLogs
-            .Include(x => x.Driver).ThenInclude(d => d.Employee).ThenInclude(e => e.User)
-            .Include(x => x.OldTruck)
-            .Include(x => x.NewTruck)
-            .Include(x => x.CreatedBy)
-            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Log no encontrado" });
-        return Ok(MapToResponse(item));
+        var result = await _fleetLogService.GetByIdAsync(id);
+        if (result == null) return NotFound(new { error = "Log no encontrado" });
+        return Ok(result);
     }
 
     [HttpGet("by-driver/{driverId:guid}")]
-    public async Task<ActionResult<IEnumerable<FleetLogResponse>>> ByDriver(Guid driverId)
+    public async Task<IActionResult> ByDriver(Guid driverId, [FromQuery] PagedRequest request)
     {
-        var items = await _context.FleetLogs
-            .Include(x => x.Driver).ThenInclude(d => d.Employee).ThenInclude(e => e.User)
-            .Include(x => x.OldTruck)
-            .Include(x => x.NewTruck)
-            .Include(x => x.CreatedBy)
-            .Where(x => !x.IsDeleted && x.DriverId == driverId)
-            .OrderByDescending(x => x.Timestamp)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var result = await _fleetLogService.GetByDriverAsync(driverId, request);
+        return Ok(result);
     }
 
     [HttpGet("by-truck/{truckId:guid}")]
-    public async Task<ActionResult<IEnumerable<FleetLogResponse>>> ByTruck(Guid truckId)
+    public async Task<IActionResult> ByTruck(Guid truckId, [FromQuery] PagedRequest request)
     {
-        var items = await _context.FleetLogs
-            .Include(x => x.Driver).ThenInclude(d => d.Employee).ThenInclude(e => e.User)
-            .Include(x => x.OldTruck)
-            .Include(x => x.NewTruck)
-            .Include(x => x.CreatedBy)
-            .Where(x => !x.IsDeleted && (x.OldTruckId == truckId || x.NewTruckId == truckId))
-            .OrderByDescending(x => x.Timestamp)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var result = await _fleetLogService.GetByTruckAsync(truckId, request);
+        return Ok(result);
     }
 
-    [HttpPost]
-    public async Task<ActionResult<FleetLogResponse>> Create([FromBody] CreateFleetLogRequest request)
+    [HttpPost("start-usage")]
+    public async Task<IActionResult> StartUsage([FromBody] StartUsageRequest request)
     {
-        var tenantIdClaim = User.FindFirst("tenant_id");
-        if (tenantIdClaim == null || !Guid.TryParse(tenantIdClaim.Value, out var tenantId))
-            return Unauthorized(new { error = "No se pudo determinar el tenant" });
+        var result = await _fleetLogService.StartUsageAsync(request.DriverId, request.TruckId);
+        if (!result.Success) return BadRequest(new { error = result.Message });
+        return Ok(result.Data);
+    }
 
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
-            return Unauthorized(new { error = "No se pudo determinar el usuario" });
+    [HttpPost("end-usage")]
+    public async Task<IActionResult> EndUsage([FromBody] EndUsageRequest request)
+    {
+        // Get active log for driver and end it
+        var activeLog = await _fleetLogService.GetActiveLogForDriverAsync(request.DriverId);
+        if (activeLog == null) return NotFound(new { error = "No hay uso activo para este chofer" });
 
-        var item = new FleetLog
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            DriverId = request.DriverId,
-            OldTruckId = request.OldTruckId,
-            NewTruckId = request.NewTruckId,
-            Reason = Enum.TryParse<FleetLogReason>(request.Reason, out var r) ? r : FleetLogReason.Reassignment,
-            Timestamp = DateTime.UtcNow,
-            CreatedByUserId = userId,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.FleetLogs.Add(item);
-
-        // Update driver's current truck
-        var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.Id == request.DriverId);
-        if (driver != null)
-        {
-            driver.CurrentTruckId = request.NewTruckId;
-        }
-
-        await _context.SaveChangesAsync();
-
-        item = await _context.FleetLogs
-            .Include(x => x.Driver).ThenInclude(d => d.Employee).ThenInclude(e => e.User)
-            .Include(x => x.OldTruck)
-            .Include(x => x.NewTruck)
-            .Include(x => x.CreatedBy)
-            .FirstAsync(x => x.Id == item.Id);
-        return CreatedAtAction(nameof(GetById), new { id = item.Id }, MapToResponse(item));
+        var result = await _fleetLogService.EndUsageAsync(activeLog.Id, request.EndOdometer);
+        if (!result.Success) return BadRequest(new { error = result.Message });
+        return Ok(result.Data);
     }
 
     // No PUT/DELETE - logs are immutable
-
-    private static FleetLogResponse MapToResponse(FleetLog x) => new(
-        x.Id, x.DriverId, x.Driver?.Employee?.User?.FullName ?? "",
-        x.OldTruckId, x.OldTruck?.Plate,
-        x.NewTruckId, x.NewTruck?.Plate ?? "",
-        x.Reason.ToString(), x.Timestamp,
-        x.CreatedByUserId, x.CreatedBy?.FullName ?? "",
-        x.CreatedAt
-    );
 }
+
+public record StartUsageRequest(Guid DriverId, Guid TruckId);
+public record EndUsageRequest(Guid DriverId, decimal? EndOdometer = null);

@@ -12,7 +12,7 @@
 
 Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona inventarios, flotas tipificadas, redes Hub & Spoke y documentación legal (Carta Porte) en un entorno Multi-tenant.
 
-> **Estado:** Development Preview v0.5.3 - Services Layer Integration Tests
+> **Estado:** Development Preview v0.5.4 - Swagger/OpenAPI + Business Logic
 
 ---
 

@@ -1,147 +1,120 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Parhelion.Application.DTOs.Common;
 using Parhelion.Application.DTOs.Fleet;
-using Parhelion.Domain.Entities;
+using Parhelion.Application.Interfaces.Services;
 using Parhelion.Domain.Enums;
-using Parhelion.Infrastructure.Data;
 
 namespace Parhelion.API.Controllers;
 
 /// <summary>
 /// Controlador para gestión de choferes.
+/// CRUD, filtro por estatus, asignación de camiones y actualización de estado.
 /// </summary>
 [ApiController]
 [Route("api/drivers")]
 [Authorize]
+[Produces("application/json")]
+[Consumes("application/json")]
 public class DriversController : ControllerBase
 {
-    private readonly ParhelionDbContext _context;
+    private readonly IDriverService _driverService;
 
-    public DriversController(ParhelionDbContext context)
+    public DriversController(IDriverService driverService)
     {
-        _context = context;
+        _driverService = driverService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<DriverResponse>>> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] PagedRequest request)
     {
-        var items = await _context.Drivers
-            .Include(x => x.Employee).ThenInclude(e => e.User)
-            .Include(x => x.DefaultTruck)
-            .Include(x => x.CurrentTruck)
-            .Where(x => !x.IsDeleted)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var result = await _driverService.GetAllAsync(request);
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<DriverResponse>> GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id)
     {
-        var item = await _context.Drivers
-            .Include(x => x.Employee).ThenInclude(e => e.User)
-            .Include(x => x.DefaultTruck)
-            .Include(x => x.CurrentTruck)
-            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Chofer no encontrado" });
-        return Ok(MapToResponse(item));
+        var result = await _driverService.GetByIdAsync(id);
+        if (result == null) return NotFound(new { error = "Chofer no encontrado" });
+        return Ok(result);
     }
 
     [HttpGet("active")]
-    public async Task<ActionResult<IEnumerable<DriverResponse>>> Active()
+    public async Task<IActionResult> Active([FromQuery] PagedRequest request)
     {
-        var items = await _context.Drivers
-            .Include(x => x.Employee).ThenInclude(e => e.User)
-            .Include(x => x.DefaultTruck)
-            .Include(x => x.CurrentTruck)
-            .Where(x => !x.IsDeleted && x.Status == DriverStatus.Available)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var tenantId = GetTenantId();
+        if (tenantId == null) return Unauthorized(new { error = "No se pudo determinar el tenant" });
+
+        var result = await _driverService.GetByStatusAsync(tenantId.Value, DriverStatus.Available, request);
+        return Ok(result);
     }
 
     [HttpGet("by-status/{status}")]
-    public async Task<ActionResult<IEnumerable<DriverResponse>>> ByStatus(string status)
+    public async Task<IActionResult> ByStatus(string status, [FromQuery] PagedRequest request)
     {
         if (!Enum.TryParse<DriverStatus>(status, out var driverStatus))
             return BadRequest(new { error = "Estatus de chofer inválido" });
 
-        var items = await _context.Drivers
-            .Include(x => x.Employee).ThenInclude(e => e.User)
-            .Include(x => x.DefaultTruck)
-            .Include(x => x.CurrentTruck)
-            .Where(x => !x.IsDeleted && x.Status == driverStatus)
-            .Select(x => MapToResponse(x))
-            .ToListAsync();
-        return Ok(items);
+        var tenantId = GetTenantId();
+        if (tenantId == null) return Unauthorized(new { error = "No se pudo determinar el tenant" });
+
+        var result = await _driverService.GetByStatusAsync(tenantId.Value, driverStatus, request);
+        return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<DriverResponse>> Create([FromBody] CreateDriverRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateDriverRequest request)
     {
-        var item = new Driver
-        {
-            Id = Guid.NewGuid(),
-            EmployeeId = request.EmployeeId,
-            LicenseNumber = request.LicenseNumber,
-            LicenseType = request.LicenseType,
-            LicenseExpiration = request.LicenseExpiration,
-            DefaultTruckId = request.DefaultTruckId,
-            Status = Enum.TryParse<DriverStatus>(request.Status, out var s) ? s : DriverStatus.Available,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.Drivers.Add(item);
-        await _context.SaveChangesAsync();
-
-        item = await _context.Drivers
-            .Include(x => x.Employee).ThenInclude(e => e.User)
-            .Include(x => x.DefaultTruck)
-            .Include(x => x.CurrentTruck)
-            .FirstAsync(x => x.Id == item.Id);
-        return CreatedAtAction(nameof(GetById), new { id = item.Id }, MapToResponse(item));
+        var result = await _driverService.CreateAsync(request);
+        if (!result.Success) 
+            return Conflict(new { error = result.Message });
+        return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<DriverResponse>> Update(Guid id, [FromBody] UpdateDriverRequest request)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateDriverRequest request)
     {
-        var item = await _context.Drivers
-            .Include(x => x.Employee).ThenInclude(e => e.User)
-            .Include(x => x.DefaultTruck)
-            .Include(x => x.CurrentTruck)
-            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Chofer no encontrado" });
-
-        item.LicenseNumber = request.LicenseNumber;
-        item.LicenseType = request.LicenseType;
-        item.LicenseExpiration = request.LicenseExpiration;
-        item.DefaultTruckId = request.DefaultTruckId;
-        item.CurrentTruckId = request.CurrentTruckId;
-        item.Status = Enum.TryParse<DriverStatus>(request.Status, out var s) ? s : item.Status;
-        item.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-        return Ok(MapToResponse(item));
+        var result = await _driverService.UpdateAsync(id, request);
+        if (!result.Success)
+            return (result.Message?.Contains("no encontrado") ?? false)
+                ? NotFound(new { error = result.Message }) 
+                : BadRequest(new { error = result.Message });
+        return Ok(result.Data);
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var item = await _context.Drivers.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-        if (item == null) return NotFound(new { error = "Chofer no encontrado" });
-
-        item.IsDeleted = true;
-        item.DeletedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        var result = await _driverService.DeleteAsync(id);
+        if (!result.Success) return NotFound(new { error = result.Message });
         return NoContent();
     }
 
-    private static DriverResponse MapToResponse(Driver x) => new(
-        x.Id, x.EmployeeId, x.Employee?.User?.FullName ?? "",
-        x.LicenseNumber, x.LicenseType, x.LicenseExpiration,
-        x.DefaultTruckId, x.DefaultTruck?.Plate,
-        x.CurrentTruckId, x.CurrentTruck?.Plate,
-        x.Status.ToString(), x.CreatedAt, x.UpdatedAt
-    );
+    [HttpPatch("{id:guid}/assign-truck")]
+    public async Task<IActionResult> AssignTruck(Guid id, [FromBody] AssignTruckRequest request)
+    {
+        var result = await _driverService.AssignTruckAsync(id, request.TruckId);
+        if (!result.Success) return BadRequest(new { error = result.Message });
+        return Ok(result.Data);
+    }
+
+    [HttpPatch("{id:guid}/status")]
+    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] string status)
+    {
+        if (!Enum.TryParse<DriverStatus>(status, out var driverStatus))
+            return BadRequest(new { error = "Estatus inválido" });
+
+        var result = await _driverService.UpdateStatusAsync(id, driverStatus);
+        if (!result.Success) return NotFound(new { error = result.Message });
+        return Ok(result.Data);
+    }
+
+    private Guid? GetTenantId()
+    {
+        var claim = User.FindFirst("tenant_id");
+        return claim != null && Guid.TryParse(claim.Value, out var id) ? id : null;
+    }
 }
+
+public record AssignTruckRequest(Guid TruckId);

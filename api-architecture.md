@@ -4,8 +4,8 @@ Documentacion tecnica de la estructura API-First del backend Parhelion.
 
 ## Estado Actual
 
-**Version:** 0.5.3  
-**Enfoque:** Services Layer + Integration Tests  
+**Version:** 0.5.4  
+**Enfoque:** Swagger/OpenAPI + Business Logic  
 **Arquitectura:** Clean Architecture + Domain-Driven Design
 
 ---
