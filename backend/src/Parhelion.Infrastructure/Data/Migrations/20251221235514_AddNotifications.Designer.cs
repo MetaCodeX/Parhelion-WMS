@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Parhelion.Infrastructure.Data;
@@ -11,9 +12,11 @@ using Parhelion.Infrastructure.Data;
 namespace Parhelion.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ParhelionDbContext))]
-    partial class ParhelionDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251221235514_AddNotifications")]
+    partial class AddNotifications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1067,82 +1070,6 @@ namespace Parhelion.Infrastructure.Data.Migrations
                     b.ToTable("RouteSteps");
                 });
 
-            modelBuilder.Entity("Parhelion.Domain.Entities.ServiceApiKey", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("KeyHash")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<Guid?>("LastModifiedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("LastUsedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("LastUsedFromIp")
-                        .HasMaxLength(45)
-                        .HasColumnType("character varying(45)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<uint>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
-
-                    b.Property<string>("Scopes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("KeyHash")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ServiceApiKeys_KeyHash");
-
-                    b.HasIndex("TenantId", "IsActive")
-                        .HasDatabaseName("IX_ServiceApiKeys_Tenant_Active");
-
-                    b.ToTable("ServiceApiKeys", (string)null);
-                });
-
             modelBuilder.Entity("Parhelion.Domain.Entities.Shift", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1699,17 +1626,6 @@ namespace Parhelion.Infrastructure.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<decimal?>("LastLatitude")
-                        .HasPrecision(10, 6)
-                        .HasColumnType("numeric(10,6)");
-
-                    b.Property<DateTime?>("LastLocationUpdate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal?>("LastLongitude")
-                        .HasPrecision(10, 6)
-                        .HasColumnType("numeric(10,6)");
-
                     b.Property<DateTime?>("LastMaintenanceDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -2256,17 +2172,6 @@ namespace Parhelion.Infrastructure.Data.Migrations
                     b.Navigation("Location");
 
                     b.Navigation("RouteBlueprint");
-                });
-
-            modelBuilder.Entity("Parhelion.Domain.Entities.ServiceApiKey", b =>
-                {
-                    b.HasOne("Parhelion.Domain.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("Parhelion.Domain.Entities.Shift", b =>

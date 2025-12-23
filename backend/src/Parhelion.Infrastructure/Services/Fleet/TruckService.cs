@@ -144,6 +144,20 @@ public class TruckService : ITruckService
         return OperationResult<TruckResponse>.Ok(MapToResponse(entity), $"Estado actualizado");
     }
 
+    public async Task<OperationResult> UpdateLocationAsync(Guid id, decimal latitude, decimal longitude, CancellationToken cancellationToken = default)
+    {
+        var entity = await _unitOfWork.Trucks.GetByIdAsync(id, cancellationToken);
+        if (entity == null) return OperationResult.Fail("Camión no encontrado");
+
+        entity.LastLatitude = latitude;
+        entity.LastLongitude = longitude;
+        entity.LastLocationUpdate = DateTime.UtcNow;
+
+        _unitOfWork.Trucks.Update(entity);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return OperationResult.Ok();
+    }
+
     public async Task<PagedResult<TruckResponse>> GetAvailableAsync(Guid tenantId, PagedRequest request, CancellationToken cancellationToken = default)
     {
         var (items, totalCount) = await _unitOfWork.Trucks.GetPagedAsync(request, filter: t => t.TenantId == tenantId && t.IsActive, orderBy: q => q.OrderBy(t => t.Plate), cancellationToken);

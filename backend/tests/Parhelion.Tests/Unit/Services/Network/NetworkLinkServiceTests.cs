@@ -53,6 +53,7 @@ public class NetworkLinkServiceTests : IClassFixture<ServiceTestFixture>
         var result = await service.CreateAsync(request);
 
         Assert.False(result.Success);
+        Assert.NotNull(result.Message);
         Assert.Contains("origen", result.Message.ToLower());
     }
 

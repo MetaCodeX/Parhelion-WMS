@@ -137,6 +137,64 @@ public class DriverService : IDriverService
         return OperationResult<DriverResponse>.Ok(await MapToResponseAsync(entity, cancellationToken), $"Estado actualizado a {status}");
     }
 
+    public async Task<PagedResult<DriverResponse>> GetNearbyDriversAsync(decimal lat, decimal lon, double radiusKm, Guid tenantId, PagedRequest request, CancellationToken cancellationToken = default)
+    {
+        // 1. Obtener empleados del tenant
+        var employees = await _unitOfWork.Employees.FindAsync(e => e.TenantId == tenantId, cancellationToken);
+        var employeeIds = employees.Select(e => e.Id).ToHashSet();
+
+        // 2. Obtener choferes activos con camión asignado
+        // Nota: Idealmente esto se haría con PostGIS, pero para MVP filtramos en memoria
+        var drivers = await _unitOfWork.Drivers.FindAsync(
+            d => employeeIds.Contains(d.EmployeeId) && 
+                 d.Status == DriverStatus.Available && 
+                 d.CurrentTruckId != null, 
+            cancellationToken);
+
+        var resultDtos = new List<DriverResponse>();
+
+        foreach (var driver in drivers)
+        {
+            var truck = await _unitOfWork.Trucks.GetByIdAsync(driver.CurrentTruckId!.Value, cancellationToken);
+            
+            // Si el camión no tiene ubicación, saltar
+            if (truck == null || truck.LastLatitude == null || truck.LastLongitude == null) continue;
+
+            // 3. Fórmula del Haversine
+            var distance = CalculateDistance(
+                (double)lat, (double)lon, 
+                (double)truck.LastLatitude.Value, (double)truck.LastLongitude.Value);
+
+            if (distance <= radiusKm)
+            {
+                resultDtos.Add(await MapToResponseAsync(driver, cancellationToken));
+            }
+        }
+
+        // Paginación en memoria
+        var totalCount = resultDtos.Count;
+        var pagedItems = resultDtos
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .ToList();
+
+        return PagedResult<DriverResponse>.From(pagedItems, totalCount, request);
+    }
+
+    private static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+    {
+        var R = 6371; // Radio de la Tierra en km
+        var dLat = ToRadians(lat2 - lat1);
+        var dLon = ToRadians(lon2 - lon1);
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        return R * c;
+    }
+
+    private static double ToRadians(double angle) => Math.PI * angle / 180.0;
+
     public async Task<OperationResult<DriverResponse>> AssignTruckAsync(Guid driverId, Guid truckId, CancellationToken cancellationToken = default)
     {
         var entity = await _unitOfWork.Drivers.GetByIdAsync(driverId, cancellationToken);

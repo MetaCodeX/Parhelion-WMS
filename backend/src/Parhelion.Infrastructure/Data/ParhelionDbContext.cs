@@ -69,6 +69,12 @@ public class ParhelionDbContext : DbContext
     public DbSet<CatalogItem> CatalogItems => Set<CatalogItem>();
     public DbSet<InventoryStock> InventoryStocks => Set<InventoryStock>();
     public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
+    
+    // Notificaciones (Agentes IA n8n)
+    public DbSet<Notification> Notifications => Set<Notification>();
+    
+    // Service API Keys (autenticación de servicios externos)
+    public DbSet<ServiceApiKey> ServiceApiKeys => Set<ServiceApiKey>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

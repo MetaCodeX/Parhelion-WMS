@@ -4,6 +4,68 @@ Historial de cambios del proyecto Parhelion Logistics.
 
 ---
 
+## [0.5.6] - 2025-12-22
+
+### Agregado
+
+- **Sistema de Webhooks (Backend → n8n)**:
+
+  - `IWebhookPublisher` - Interface en Application Layer
+  - `N8nWebhookPublisher` - Implementación fire-and-forget con logging
+  - `ICallbackTokenService` & `CallbackTokenService` - Implementación de tokens JWT efímeros (15m)
+  - `NullWebhookPublisher` - Implementación vacía para desactivar webhooks
+  - `N8nConfiguration` - Configuración tipada desde appsettings
+  - 5 DTOs de eventos: ShipmentException, BookingRequest, HandshakeAttempt, StatusChanged, CheckpointCreated
+
+- **Sistema de Notificaciones (n8n → Backend)**:
+
+  - Nueva entidad `Notification` con tipos (Alert, Info, Warning, Success) y prioridades
+  - `NotificationsController` con endpoints para n8n (POST) y apps móviles (GET)
+  - `INotificationService` + `NotificationService` implementación
+  - Migración `AddNotifications` aplicada
+
+- **Autenticación de Servicios Externos (Multi-Tenant)**:
+
+  - Nueva entidad `ServiceApiKey` con TenantId, KeyHash (SHA256), Scopes, Expiración
+  - `ServiceApiKeyAttribute` - Filtro que valida X-Service-Key contra BD
+  - Lookup de TenantId desde tabla en lugar de hardcoding
+  - **Generación automática de API Key** al crear nuevo Tenant (responsabilidad del SuperAdmin)
+  - Migración `AddServiceApiKeys` aplicada
+
+- **Telemetría GPS de Camiones**:
+
+  - Campos `LastLatitude`, `LastLongitude`, `LastLocationUpdate` en Truck
+  - Endpoint `POST /api/trucks/{id}/location` para simulación GPS
+
+- **Búsqueda Geoespacial de Choferes**:
+
+  - `IDriverService.GetNearbyDriversAsync` con fórmula Haversine
+  - Endpoint `GET /api/drivers/nearby?lat=&lon=&radius=`
+  - Filtrado por DriverStatus.Available y TenantId
+
+### Modificado
+
+- `DriversController.GetNearby` - Ahora resuelve TenantId desde ServiceApiKey (producción-ready)
+- `ServiceApiKeyAttribute` - Refinado para soportar auth híbrida (Header `X-Service-Key` y `Authorization: Bearer`)
+- `ShipmentService.UpdateStatusAsync` - Publica webhook `shipment.exception` automáticamente
+- `Program.cs` - Registro condicional de IWebhookPublisher (N8n o Null)
+- `docker-compose.yml` - Agregado servicio n8n con PostgreSQL compartido
+- Estandarización de "Envelope" JSON para todos los eventos de sistema (CorrelationId, Timestamp, CallbackToken)
+
+### Seguridad
+
+- API Keys almacenadas como SHA256 hash (nunca plain text)
+- Validación de expiración y estado activo
+- Rate limiting de actualización LastUsedAt (fire-and-forget)
+
+### Notas Técnicas
+
+- Webhooks son fire-and-forget: errores se loguean pero no interrumpen flujo
+- Configuración `N8n:Enabled` controla activación de webhooks
+- ServiceApiKeys requieren seed manual para tenants
+
+---
+
 ## [0.5.5] - 2025-12-18
 
 ### Agregado

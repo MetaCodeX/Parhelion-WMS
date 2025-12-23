@@ -23,8 +23,9 @@ public class JwtService : IJwtService
     {
         _configuration = configuration;
         
-        var secretKey = _configuration["Jwt:SecretKey"] 
-            ?? throw new InvalidOperationException("JWT SecretKey not configured");
+        var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET")
+            ?? _configuration["Jwt:SecretKey"] 
+            ?? throw new InvalidOperationException("JWT SecretKey not configured (JWT_SECRET envar or Jwt:SecretKey config)");
             
         _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         _accessTokenExpirationMinutes = int.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "120");

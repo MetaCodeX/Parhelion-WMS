@@ -10,6 +10,7 @@ using Parhelion.Infrastructure.Auth;
 using Parhelion.Infrastructure.Data;
 using Parhelion.Infrastructure.Data.Interceptors;
 using Parhelion.Infrastructure.Services;
+using Parhelion.Infrastructure.External.Webhooks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,9 +78,14 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<AuditSaveChangesInterceptor>();
 
 // ========== DATABASE ==========
-// Usar connection string de variables de entorno o appsettings
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+// Connection string desde variable de entorno o appsettings
+var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "postgres";
+var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "";
+var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "parhelion_dev";
+var connectionString = !string.IsNullOrEmpty(builder.Configuration.GetConnectionString("DefaultConnection"))
+    ? builder.Configuration.GetConnectionString("DefaultConnection")!
+    : $"Host={dbHost};Port=5432;Database={dbName};Username={dbUser};Password={dbPassword}";
 
 builder.Services.AddDbContext<ParhelionDbContext>((sp, options) =>
 {
@@ -152,13 +158,54 @@ builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IInventoryS
 builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.IInventoryTransactionService, 
     Parhelion.Infrastructure.Services.Warehouse.InventoryTransactionService>();
 
+// ========== NOTIFICATION SERVICES ==========
+builder.Services.AddScoped<Parhelion.Application.Interfaces.Services.INotificationService, 
+    Parhelion.Infrastructure.Services.Notification.NotificationService>();
+
 // ========== VALIDATORS ==========
 builder.Services.AddSingleton<Parhelion.Application.Interfaces.Validators.ICargoCompatibilityValidator, 
     Parhelion.Infrastructure.Validators.CargoCompatibilityValidator>();
 
+// ========== WEBHOOK/N8N INTEGRATION ==========
+// Credenciales se leen de variables de entorno por seguridad
+builder.Services.Configure<N8nConfiguration>(options =>
+{
+    builder.Configuration.GetSection("N8n").Bind(options);
+    // Override desde variables de entorno si existen
+    var envBaseUrl = Environment.GetEnvironmentVariable("N8N_BASE_URL");
+    if (!string.IsNullOrEmpty(envBaseUrl))
+    {
+        options.BaseUrl = envBaseUrl;
+    }
+    var envApiKey = Environment.GetEnvironmentVariable("N8N_WEBHOOK_SECRET");
+    if (!string.IsNullOrEmpty(envApiKey))
+    {
+        options.ApiKey = envApiKey;
+    }
+});
+
+// CallbackTokenService (necesario tanto para publisher como para ServiceApiKeyAttribute)
+builder.Services.AddSingleton<Parhelion.Application.Interfaces.ICallbackTokenService, 
+    Parhelion.Infrastructure.Services.Auth.CallbackTokenService>();
+
+var n8nEnabled = builder.Configuration.GetValue<bool>("N8n:Enabled");
+if (n8nEnabled)
+{
+    // Si n8n está habilitado, usar el publisher real con HttpClient
+    builder.Services.AddHttpClient<Parhelion.Application.Interfaces.IWebhookPublisher, N8nWebhookPublisher>();
+}
+else
+{
+    // Si está deshabilitado, usar NullPublisher (no hace nada)
+    builder.Services.AddSingleton<Parhelion.Application.Interfaces.IWebhookPublisher, 
+        Parhelion.Application.Interfaces.NullWebhookPublisher>();
+}
+
 // ========== JWT AUTHENTICATION ==========
-var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
-    ?? "ParhelionLogisticsDefaultSecretKey2024!";
+// JWT Secret desde variable de entorno
+var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
+    ?? builder.Configuration["Jwt:SecretKey"] 
+    ?? throw new InvalidOperationException("JWT_SECRET environment variable or Jwt:SecretKey config is required");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -201,10 +248,14 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ParhelionDbContext>();
     
-    // Auto-migrate en desarrollo
-    if (app.Environment.IsDevelopment())
+    // Auto-migrate - seguro en dev/staging
+    // En producción real, usar: dotnet ef database update
+    var pendingMigrations = await db.Database.GetPendingMigrationsAsync();
+    if (pendingMigrations.Any())
     {
+        Console.WriteLine($"Applying {pendingMigrations.Count()} pending migration(s)...");
         await db.Database.MigrateAsync();
+        Console.WriteLine("Migrations applied successfully.");
     }
     
     // Seed data siempre (es idempotente)
@@ -266,5 +317,8 @@ app.MapGet("/health/db", async (ParhelionDbContext db) =>
 
 // Seed initial data (SuperUser, DefaultTenant) if database is empty
 await Parhelion.API.Data.DataSeeder.SeedAsync(app.Services);
+
+// Seed Crisis Management scenarios (for dev/testing)
+// await Parhelion.API.Data.CrisisSeeder.SeedAsync(app.Services);
 
 app.Run();

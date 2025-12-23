@@ -57,6 +57,17 @@ public class Truck : TenantEntity
     /// <summary>Odómetro actual en kilómetros</summary>
     public decimal? CurrentOdometerKm { get; set; }
 
+    // ========== TELEMETRÍA (GPS) ==========
+    
+    /// <summary>Última latitud reportada</summary>
+    public decimal? LastLatitude { get; set; }
+    
+    /// <summary>Última longitud reportada</summary>
+    public decimal? LastLongitude { get; set; }
+    
+    /// <summary>Fecha del último reporte de ubicación</summary>
+    public DateTime? LastLocationUpdate { get; set; }
+
     // ========== NAVIGATION PROPERTIES ==========
     
     public Tenant Tenant { get; set; } = null!;

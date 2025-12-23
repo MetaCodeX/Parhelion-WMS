@@ -39,4 +39,8 @@ public interface IDriverService : IGenericService<Driver, DriverResponse, Create
     /// Asigna un camión al chofer.
     /// </summary>
     Task<OperationResult<DriverResponse>> AssignTruckAsync(Guid driverId, Guid truckId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Busca choferes cercanos a una coordenada (Crisis Management).
+    /// </summary>
+    Task<PagedResult<DriverResponse>> GetNearbyDriversAsync(decimal lat, decimal lon, double radiusKm, Guid tenantId, PagedRequest request, CancellationToken cancellationToken = default);
 }

@@ -34,7 +34,7 @@ public class TenantService : ITenantService
             orderBy: q => q.OrderByDescending(t => t.CreatedAt),
             cancellationToken);
 
-        var dtos = items.Select(MapToResponse);
+        var dtos = items.Select(t => MapToResponse(t));
         return PagedResult<TenantResponse>.From(dtos, totalCount, request);
     }
 
@@ -74,11 +74,54 @@ public class TenantService : ITenantService
         };
 
         await _unitOfWork.Tenants.AddAsync(entity, cancellationToken);
+        
+        // Generar ServiceApiKey automáticamente para el nuevo tenant
+        var (plainTextKey, apiKey) = GenerateServiceApiKey(entity.Id, entity.CompanyName);
+        await _unitOfWork.ServiceApiKeys.AddAsync(apiKey, cancellationToken);
+        
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return OperationResult<TenantResponse>.Ok(
-            MapToResponse(entity),
-            "Tenant creado exitosamente");
+            MapToResponse(entity, plainTextKey),
+            "Tenant creado exitosamente. IMPORTANTE: Guarda la API Key, no podrás verla de nuevo.");
+    }
+    
+    /// <summary>
+    /// Genera una ServiceApiKey segura para un tenant.
+    /// Retorna (plainTextKey, entity) - La key en texto plano solo se muestra una vez.
+    /// </summary>
+    private static (string PlainTextKey, ServiceApiKey Entity) GenerateServiceApiKey(Guid tenantId, string tenantName)
+    {
+        // Generar key aleatoria segura: prefix + random bytes
+        var randomBytes = new byte[32];
+        System.Security.Cryptography.RandomNumberGenerator.Fill(randomBytes);
+        var plainTextKey = $"pk_{tenantName.ToLowerInvariant().Replace(" ", "")[..Math.Min(6, tenantName.Length)]}_{Convert.ToBase64String(randomBytes).Replace("+", "").Replace("/", "").Replace("=", "")[..32]}";
+        
+        // Hash SHA256 para almacenamiento seguro
+        var keyHash = ComputeSha256Hash(plainTextKey);
+        
+        var apiKey = new ServiceApiKey
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            KeyHash = keyHash,
+            Name = $"n8n-{tenantName.ToLowerInvariant().Replace(" ", "-")}",
+            Description = "API Key generada automáticamente para integración n8n",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+        
+        return (plainTextKey, apiKey);
+    }
+    
+    /// <summary>
+    /// Computa SHA256 hash de la key para almacenamiento seguro.
+    /// </summary>
+    private static string ComputeSha256Hash(string rawData)
+    {
+        var bytes = System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(rawData));
+        return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
     }
 
     /// <inheritdoc />
@@ -164,7 +207,7 @@ public class TenantService : ITenantService
             orderBy: q => q.OrderByDescending(t => t.CreatedAt),
             cancellationToken);
 
-        var dtos = items.Select(MapToResponse);
+        var dtos = items.Select(t => MapToResponse(t));
         return PagedResult<TenantResponse>.From(dtos, totalCount, request);
     }
 
@@ -193,7 +236,7 @@ public class TenantService : ITenantService
     /// <summary>
     /// Mapea una entidad Tenant a su DTO de respuesta.
     /// </summary>
-    private static TenantResponse MapToResponse(Tenant entity) => new(
+    private static TenantResponse MapToResponse(Tenant entity, string? generatedApiKey = null) => new(
         entity.Id,
         entity.CompanyName,
         entity.ContactEmail,
@@ -201,6 +244,7 @@ public class TenantService : ITenantService
         entity.DriverCount,
         entity.IsActive,
         entity.CreatedAt,
-        entity.UpdatedAt
+        entity.UpdatedAt,
+        generatedApiKey
     );
 }

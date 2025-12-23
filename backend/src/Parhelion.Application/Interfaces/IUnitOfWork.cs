@@ -41,6 +41,10 @@ public interface IUnitOfWork : IDisposable
     ITenantRepository<RouteBlueprint> RouteBlueprints { get; }
     IGenericRepository<RouteStep> RouteSteps { get; }
     
+    // ========== NOTIFICATION / N8N REPOSITORIES ==========
+    IGenericRepository<Notification> Notifications { get; }
+    ITenantRepository<ServiceApiKey> ServiceApiKeys { get; }
+    
     // ========== TRANSACTION CONTROL ==========
     
     /// <summary>

@@ -25,7 +25,11 @@ public record TenantResponse(
     int DriverCount,
     bool IsActive,
     DateTime CreatedAt,
-    DateTime? UpdatedAt
+    DateTime? UpdatedAt,
+    /// <summary>
+    /// API Key generada automáticamente. Solo se muestra al momento de creación.
+    /// </summary>
+    string? GeneratedApiKey = null
 );
 
 // ========== USER DTOs ==========

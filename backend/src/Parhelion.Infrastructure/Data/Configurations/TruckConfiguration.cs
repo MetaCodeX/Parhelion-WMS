@@ -24,6 +24,12 @@ public class TruckConfiguration : IEntityTypeConfiguration<Truck>
         builder.Property(t => t.MaxVolumeM3)
             .HasPrecision(10, 2);
 
+        builder.Property(t => t.LastLatitude)
+            .HasPrecision(10, 6);
+            
+        builder.Property(t => t.LastLongitude)
+            .HasPrecision(10, 6);
+
         // Placa única por tenant
         builder.HasIndex(t => new { t.TenantId, t.Plate }).IsUnique();
         

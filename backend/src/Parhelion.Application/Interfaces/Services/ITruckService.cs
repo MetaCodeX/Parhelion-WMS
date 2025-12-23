@@ -39,4 +39,8 @@ public interface ITruckService : IGenericService<Truck, TruckResponse, CreateTru
     /// Obtiene camiones disponibles (activos).
     /// </summary>
     Task<PagedResult<TruckResponse>> GetAvailableAsync(Guid tenantId, PagedRequest request, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Actualiza la ubicación GPS del camión (Telemetría).
+    /// </summary>
+    Task<OperationResult> UpdateLocationAsync(Guid id, decimal latitude, decimal longitude, CancellationToken cancellationToken = default);
 }

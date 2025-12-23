@@ -1,13 +1,13 @@
 # PARHELION-LOGISTICS | Modelo de Base de Datos
 
-**Version:** 2.5 (v0.4.4 - WMS Enhancement)  
+**Version:** 2.6 (v0.5.6 - n8n Integration + Webhooks + Notifications)  
 **Fecha:** Diciembre 2025  
 **Motor:** PostgreSQL + Entity Framework Core (Code First)  
 **Estado:** Diseno Cerrado - Listo para Implementacion
 
 > **Nota Tecnica:** Esta plataforma unifica WMS (Warehouse Management System) y TMS (Transportation Management System). El modulo de almacen gestiona inventario estatico y carga, mientras que el nucleo TMS maneja logistica de media milla: gestion de flotas tipificadas, redes Hub & Spoke y trazabilidad de envios en movimiento.
 
-> **v0.4.4:** Agrega CatalogItem (catalogo maestro de productos), InventoryStock (inventario cuantificado por zona y lote), InventoryTransaction (Kardex de movimientos), campos de auditoria (CreatedByUserId, LastModifiedByUserId), geolocalizacion (Latitude/Longitude), y optimistic locking (RowVersion).
+> **v0.5.6:** Agrega Notification (sistema de notificaciones para agentes IA), ServiceApiKey (autenticación multi-tenant para servicios externos), telemetría GPS en Truck (LastLatitude/Longitude), y búsqueda geospacial de choferes.
 
 ---
 
@@ -85,11 +85,11 @@ erDiagram
 
 ---
 
-## 1.1 Entidades del Sistema (23 tablas)
+## 1.1 Entidades del Sistema (25 tablas)
 
 | Modulo        | Entidades                                                    |
 | ------------- | ------------------------------------------------------------ |
-| **Core**      | Tenant, User, Role, RefreshToken                             |
+| **Core**      | Tenant, User, Role, RefreshToken, ServiceApiKey              |
 | **Employee**  | Employee, Shift                                              |
 | **Fleet**     | Driver, Truck, FleetLog                                      |
 | **Warehouse** | Location, WarehouseZone, WarehouseOperator                   |
@@ -97,6 +97,7 @@ erDiagram
 | **Shipment**  | Shipment, ShipmentItem, ShipmentCheckpoint, ShipmentDocument |
 | **Routing**   | RouteBlueprint, RouteStep, NetworkLink                       |
 | **CRM**       | Client                                                       |
+| **n8n**       | Notification                                                 |
 
 ---
 
@@ -110,7 +111,117 @@ erDiagram
 | `USER`   | Usuarios del sistema (Admin, Chofer, Demo). Siempre pertenece a un Tenant.   |
 | `ROLE`   | Roles del sistema: `Admin`, `Driver`, `DemoUser`.                            |
 
-### 2.2 Módulo de Flotilla
+### 2.2 Módulo n8n / Automatización (v0.5.6)
+
+Este módulo soporta la integración con n8n para automatización de workflows y agentes de IA.
+
+#### 2.2.1 ServiceApiKey - Autenticación de Agentes
+
+| Campo            | Tipo          | Descripción                                                       |
+| ---------------- | ------------- | ----------------------------------------------------------------- |
+| `Id`             | UUID          | Primary Key                                                       |
+| `TenantId`       | UUID          | FK → Tenant. Cada API Key pertenece a un tenant específico        |
+| `KeyHash`        | VARCHAR(64)   | SHA256 hash de la key (nunca plain text)                          |
+| `Name`           | VARCHAR(100)  | Nombre descriptivo (ej: "n8n-production")                         |
+| `Description`    | VARCHAR(500)  | Propósito de la key                                               |
+| `Scopes`         | VARCHAR(1000) | Permisos comma-separated (ej: "drivers:read,notifications:write") |
+| `ExpiresAt`      | TIMESTAMP     | Fecha de expiración (NULL = no expira)                            |
+| `LastUsedAt`     | TIMESTAMP     | Último uso registrado                                             |
+| `LastUsedFromIp` | VARCHAR(45)   | Dirección IP del último request                                   |
+| `IsActive`       | BOOLEAN       | Estado activo/inactivo                                            |
+
+**Flujo de Autenticación:**
+
+```mermaid
+sequenceDiagram
+    participant n8n as n8n Agent
+    participant API as Parhelion API
+    participant DB as PostgreSQL
+
+    n8n->>API: GET /api/drivers/nearby<br/>X-Service-Key: abc123
+    API->>API: SHA256("abc123") → hash
+    API->>DB: SELECT * FROM ServiceApiKeys<br/>WHERE KeyHash = hash
+    DB-->>API: TenantId, Description
+    Note over API: Valida Scope y Permisos
+
+#### 2.2.2 CallbackToken (JWT) - Autenticación Temporal para Webhooks
+
+Para integraciones de ida y vuelta (como n8n), el sistema utiliza eventos Webhook que incluyen un `CallbackToken`.
+
+- **Mecanismo:** JWT (JSON Web Token) firmado con `JWT_SECRET`.
+- **Duración:** 15 minutos.
+- **Payload:** Incluye `TenantId`, `CorrelationId` y `Scope` (callback).
+- **Flujo:**
+    1. Backend envía POST Webhook a n8n con `payload` y `callbackToken`.
+    2. n8n recibe el evento.
+    3. n8n realiza llamadas al API (ej. GET Drivers) usando header: `Authorization: Bearer <callbackToken>`.
+    4. Backend valida firma y expiración sin consultar BD.
+    5. Token expira automáticamente.
+
+Esto elimina la necesidad de compartir `ServiceApiKeys` de larga duración con flujos temporales externos.
+    API->>API: HttpContext.Items["ServiceTenantId"] = xxx
+    API->>DB: Query con TenantId filter
+    DB-->>API: Drivers del tenant
+    API-->>n8n: 200 OK [{driver1}, {driver2}]
+```
+
+**Generación de API Key (Responsabilidad del SuperAdmin):**
+
+> Cuando el SuperAdmin crea un nuevo Tenant, también debe crear una ServiceApiKey asociada.
+> La key plain-text se muestra UNA SOLA VEZ al momento de creación.
+
+```sql
+-- Ejemplo: Crear API Key para tenant "AcmeCorp"
+INSERT INTO "ServiceApiKeys" (
+    "Id", "TenantId", "KeyHash", "Name", "IsActive", "CreatedAt", "IsDeleted"
+) VALUES (
+    gen_random_uuid(),
+    'acme-tenant-uuid-here',
+    encode(sha256('secret-key-aqui'::bytea), 'hex'),
+    'n8n-acme-production',
+    true, NOW(), false
+);
+```
+
+#### 2.2.2 Notification - Notificaciones para Apps Móviles
+
+| Campo               | Tipo         | Descripción                                          |
+| ------------------- | ------------ | ---------------------------------------------------- |
+| `Id`                | UUID         | Primary Key                                          |
+| `TenantId`          | UUID         | FK → Tenant                                          |
+| `UserId`            | UUID         | FK → User. Destinatario de la notificación           |
+| `Title`             | VARCHAR(200) | Título corto                                         |
+| `Message`           | TEXT         | Contenido completo                                   |
+| `Type`              | ENUM         | Alert, Info, Warning, Success                        |
+| `Priority`          | ENUM         | Low, Normal, High, Urgent                            |
+| `RelatedEntityType` | VARCHAR(50)  | Tipo de entidad relacionada (Shipment, Driver, etc.) |
+| `RelatedEntityId`   | UUID         | UUID de la entidad relacionada                       |
+| `IsRead`            | BOOLEAN      | Marca de lectura                                     |
+| `ReadAt`            | TIMESTAMP    | Fecha/hora de lectura                                |
+| `ExpiresAt`         | TIMESTAMP    | Auto-eliminación después de esta fecha               |
+| `ActionUrl`         | VARCHAR(500) | Deep link para la app móvil                          |
+| `Metadata`          | JSONB        | Datos adicionales libres                             |
+
+**Tipos de Notificación:**
+
+| Tipo      | Uso                                  |
+| --------- | ------------------------------------ |
+| `Alert`   | Emergencias, excepciones críticas    |
+| `Info`    | Información general                  |
+| `Warning` | Advertencias que requieren atención  |
+| `Success` | Confirmaciones, acciones completadas |
+
+**Flujo n8n → App Móvil:**
+
+```mermaid
+flowchart LR
+    N8N[n8n Agent] -->|POST /api/notifications| API[Parhelion API]
+    API -->|INSERT| DB[(PostgreSQL)]
+    DB -.->|Polling / WebSocket| APP[Driver App]
+    APP -->|PATCH /read| API
+```
+
+### 2.3 Módulo de Flotilla
 
 | Tabla       | Propósito                                                                                      |
 | ----------- | ---------------------------------------------------------------------------------------------- |

@@ -4,8 +4,8 @@ Documentacion tecnica de la estructura API-First del backend Parhelion.
 
 ## Estado Actual
 
-**Version:** 0.5.5  
-**Enfoque:** WMS/TMS Services + Business Rules  
+**Version:** 0.5.6
+**Enfoque:** n8n Integration + Secure Webhooks
 **Arquitectura:** Clean Architecture + Domain-Driven Design
 
 ---
@@ -60,6 +60,7 @@ Gestion de envios, items y trazabilidad.
 | `/api/shipment-checkpoints` | ShipmentCheckpoint | Services | ShipmentCheckpointService |
 | `/api/shipment-documents`   | ShipmentDocument   | Services | ShipmentDocumentService   |
 | `/api/catalog-items`        | CatalogItem        | Services | CatalogItemService        |
+| `/api/notifications`        | Notification       | Services | NotificationService       |
 
 ### Network Layer
 

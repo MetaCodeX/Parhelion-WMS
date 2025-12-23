@@ -4,6 +4,7 @@ using Parhelion.Application.DTOs.Common;
 using Parhelion.Application.DTOs.Fleet;
 using Parhelion.Application.Interfaces.Services;
 using Parhelion.Domain.Enums;
+using Parhelion.API.Filters;
 
 namespace Parhelion.API.Controllers;
 
@@ -60,6 +61,47 @@ public class DriversController : ControllerBase
         if (tenantId == null) return Unauthorized(new { error = "No se pudo determinar el tenant" });
 
         var result = await _driverService.GetByStatusAsync(tenantId.Value, driverStatus, request);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Busca choferes disponibles cercanos a una ubicación.
+    /// Autenticación: JWT (Usuario) o Bearer {CallbackToken} / X-Service-Key (n8n).
+    /// </summary>
+    /// <param name="lat">Latitud central.</param>
+    /// <param name="lon">Longitud central.</param>
+    /// <param name="radius">Radio en kilómetros (default 50).</param>
+    /// <param name="pageNumber">Número de página.</param>
+    /// <param name="pageSize">Resultados por página.</param>
+    [HttpGet("nearby")]
+    [ServiceApiKey] // Permite acceso con X-Service-Key para n8n
+    [AllowAnonymous] // Bypass [Authorize] de la clase - ServiceApiKey filter valida
+    [ProducesResponseType(typeof(PagedResult<DriverResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetNearby(
+        [FromQuery] decimal lat, 
+        [FromQuery] decimal lon, 
+        [FromQuery] double radius = 50,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        // 1. Intentar obtener Tenant del User Claim (JWT)
+        var tenantId = GetTenantId();
+        
+        // 2. Si no hay JWT, obtener del ServiceApiKey (resuelto por el filtro)
+        if (tenantId == null && HttpContext.Items.TryGetValue(ServiceApiKeyAttribute.TenantIdKey, out var serviceTenantId))
+        {
+            tenantId = serviceTenantId as Guid?;
+        }
+
+        // 3. Si aún no hay tenant, rechazar
+        if (tenantId == null)
+        {
+            return Unauthorized(new { error = "No se pudo determinar el tenant" });
+        }
+
+        var request = new PagedRequest { Page = pageNumber, PageSize = pageSize };
+        var result = await _driverService.GetNearbyDriversAsync(lat, lon, radius, tenantId.Value, request);
         return Ok(result);
     }
 

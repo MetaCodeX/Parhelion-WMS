@@ -22,7 +22,8 @@ services:
     networks:
       - parhelion-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-MetaCodeX} -d parhelion_dev" ]
+      test:
+        ["CMD-SHELL", "pg_isready -U ${DB_USER:-MetaCodeX} -d parhelion_dev"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,14 +41,16 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
       - ConnectionStrings__DefaultConnection=Host=postgres;Database=parhelion_dev;Username=${DB_USER:-MetaCodeX};Password=${DB_PASSWORD:-H4NZC0D3X1521}
-      - Jwt__Secret=${JWT_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - N8N_WEBHOOK_SECRET=${N8N_WEBHOOK_SECRET}
+      - N8N_BASE_URL=${N8N_BASE_URL:-http://parhelion-n8n:5678}
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - parhelion-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -65,7 +68,7 @@ services:
     networks:
       - parhelion-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:80" ]
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -82,7 +85,7 @@ services:
     networks:
       - parhelion-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:80" ]
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -99,7 +102,70 @@ services:
     networks:
       - parhelion-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:80" ]
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===== N8N AI ORCHESTRATOR =====
+  # Docs: https://docs.n8n.io/hosting/configuration/environment-variables/
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: parhelion-n8n
+    restart: unless-stopped
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      # ===== AUTH =====
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-parhelion2024}
+      
+      # ===== DATABASE (usa PostgreSQL de Parhelion) =====
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=parhelion_dev
+      - DB_POSTGRESDB_USER=${DB_USER:-MetaCodeX}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD:-H4NZC0D3X1521}
+      
+      # ===== WEBHOOKS =====
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      
+      # ===== DEVELOPMENT MODE =====
+      # Desactivar cookies seguras para HTTP (desarrollo via Tailscale)
+      - N8N_SECURE_COOKIE=false
+      - N8N_PROTOCOL=http
+      - N8N_HOST=0.0.0.0
+      
+      # ===== PRODUCTION MODE (descomentar cuando se use HTTPS) =====
+      # - N8N_SECURE_COOKIE=true
+      # - N8N_PROTOCOL=https
+      # - N8N_SSL_KEY=/ssl/key.pem
+      # - N8N_SSL_CERT=/ssl/cert.pem
+      
+      # ===== GENERAL =====
+      - GENERIC_TIMEZONE=America/Mexico_City
+      - N8N_LOG_LEVEL=info
+      # Desactivar telemetría y features que requieren conexión externa
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+      - N8N_TEMPLATES_ENABLED=true
+      - N8N_PERSONALIZATION_ENABLED=false
+      # Desactivar prompts de licencia community
+      - N8N_HIDE_USAGE_PAGE=true
+      - N8N_USER_MANAGEMENT_DISABLED=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+      # Para producción con SSL:
+      # - ./ssl:/ssl:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - parhelion-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5678/healthz"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -129,6 +195,8 @@ volumes:
   postgres_pgdata:
     external: true
     name: postgres_pgdata
+  n8n_data:
+    name: parhelion_n8n_data
 
 # ===== NETWORK =====
 networks:

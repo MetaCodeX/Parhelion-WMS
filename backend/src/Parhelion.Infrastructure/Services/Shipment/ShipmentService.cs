@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Parhelion.Application.DTOs.Common;
 using Parhelion.Application.DTOs.Shipment;
+using Parhelion.Application.DTOs.Webhooks;
 using Parhelion.Application.Interfaces;
 using Parhelion.Application.Interfaces.Services;
 using Parhelion.Application.Interfaces.Validators;
@@ -17,11 +18,16 @@ public class ShipmentService : IShipmentService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICargoCompatibilityValidator _cargoValidator;
+    private readonly IWebhookPublisher _webhookPublisher;
 
-    public ShipmentService(IUnitOfWork unitOfWork, ICargoCompatibilityValidator cargoValidator)
+    public ShipmentService(
+        IUnitOfWork unitOfWork, 
+        ICargoCompatibilityValidator cargoValidator,
+        IWebhookPublisher webhookPublisher)
     {
         _unitOfWork = unitOfWork;
         _cargoValidator = cargoValidator;
+        _webhookPublisher = webhookPublisher;
     }
 
 
@@ -67,6 +73,25 @@ public class ShipmentService : IShipmentService
         };
         await _unitOfWork.Shipments.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        
+        // Publicar evento de creación para validación de booking (n8n)
+        await _webhookPublisher.PublishAsync(WebhookEventTypes.ShipmentCreated, new BookingRequestEvent(
+            ShipmentId: entity.Id,
+            TrackingNumber: entity.TrackingNumber,
+            TenantId: entity.TenantId,
+            TotalWeightKg: entity.TotalWeightKg,
+            TotalVolumeM3: entity.TotalVolumeM3,
+            HasRefrigeratedItems: false, // Se actualizará cuando se agreguen items
+            HasHazmatItems: false,
+            HasFragileItems: false,
+            HasHighValueItems: entity.DeclaredValue > 500_000,
+            TotalDeclaredValue: entity.DeclaredValue ?? 0,
+            AssignedTruckId: null,
+            AssignedTruckType: null,
+            TruckMaxCapacityKg: null,
+            TruckMaxVolumeM3: null
+        ), cancellationToken);
+        
         return OperationResult<ShipmentResponse>.Ok(await MapToResponseAsync(entity, cancellationToken), "Envío creado exitosamente");
     }
 
@@ -187,7 +212,8 @@ public class ShipmentService : IShipmentService
         if (entity == null) return OperationResult<ShipmentResponse>.Fail("Envío no encontrado");
 
         // Validate status transition
-        var validationResult = ValidateStatusTransition(entity.Status, newStatus);
+        var previousStatus = entity.Status;
+        var validationResult = ValidateStatusTransition(previousStatus, newStatus);
         if (!validationResult.IsValid)
             return OperationResult<ShipmentResponse>.Fail(validationResult.ErrorMessage!);
 
@@ -200,7 +226,96 @@ public class ShipmentService : IShipmentService
 
         _unitOfWork.Shipments.Update(entity);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        
+        // Publicar eventos de webhook según el nuevo estado
+        await PublishStatusChangeEventsAsync(entity, previousStatus, newStatus, cancellationToken);
+        
         return OperationResult<ShipmentResponse>.Ok(await MapToResponseAsync(entity, cancellationToken), $"Estado actualizado a {newStatus}");
+    }
+    
+    /// <summary>
+    /// Publica eventos de webhook basados en el cambio de estado.
+    /// </summary>
+    private async Task PublishStatusChangeEventsAsync(
+        Domain.Entities.Shipment entity, 
+        ShipmentStatus previousStatus, 
+        ShipmentStatus newStatus, 
+        CancellationToken ct)
+    {
+        // Siempre publicar evento de cambio de estado
+        await _webhookPublisher.PublishAsync(WebhookEventTypes.ShipmentStatusChanged, new ShipmentStatusChangedEvent(
+            ShipmentId: entity.Id,
+            TrackingNumber: entity.TrackingNumber,
+            TenantId: entity.TenantId,
+            PreviousStatus: previousStatus.ToString(),
+            NewStatus: newStatus.ToString(),
+            ChangedAt: DateTime.UtcNow,
+            ChangedByUserId: null // TODO: obtener del contexto de usuario
+        ), ct);
+        
+        // Si cambió a Exception, publicar evento especial para Crisis Management
+        if (newStatus == ShipmentStatus.Exception)
+        {
+            await PublishExceptionEventAsync(entity, ct);
+        }
+    }
+    
+    /// <summary>
+    /// Publica evento de excepción para el agente de Crisis Management (n8n).
+    /// </summary>
+    private async Task PublishExceptionEventAsync(Domain.Entities.Shipment entity, CancellationToken ct)
+    {
+        // Obtener items para determinar tipo de carga
+        var items = await _unitOfWork.ShipmentItems.FindAsync(i => i.ShipmentId == entity.Id, ct);
+        var itemsList = items.ToList();
+        
+        var cargoType = itemsList.Any(i => i.RequiresRefrigeration) ? "Perishable" 
+                      : itemsList.Any(i => i.IsHazardous) ? "Hazmat"
+                      : entity.DeclaredValue > 500_000 ? "HighValue" 
+                      : "Standard";
+        
+        // Obtener ubicaciones
+        var originLocation = await _unitOfWork.Locations.GetByIdAsync(entity.OriginLocationId, ct);
+        var destLocation = await _unitOfWork.Locations.GetByIdAsync(entity.DestinationLocationId, ct);
+        
+        // Obtener tipo de camión y ubicación GPS
+        string? truckType = null;
+        decimal? trkLat = null;
+        decimal? trkLon = null;
+
+        if (entity.TruckId.HasValue)
+        {
+            var truck = await _unitOfWork.Trucks.GetByIdAsync(entity.TruckId.Value, ct);
+            if (truck != null)
+            {
+                truckType = truck.Type.ToString();
+                trkLat = truck.LastLatitude;
+                trkLon = truck.LastLongitude;
+            }
+        }
+        
+        await _webhookPublisher.PublishAsync(WebhookEventTypes.ShipmentException, new ShipmentExceptionEvent(
+            ShipmentId: entity.Id,
+            TrackingNumber: entity.TrackingNumber,
+            TenantId: entity.TenantId,
+            CurrentLocationId: entity.OriginLocationId, // TODO: usar CurrentLocationId cuando exista
+            CurrentLocationCode: originLocation?.Code,
+            Latitude: trkLat,    // <--- Nueva data GPS
+            Longitude: trkLon,   // <--- Nueva data GPS
+            DestinationLocationId: entity.DestinationLocationId,
+            DestinationLocationCode: destLocation?.Code,
+            CargoType: cargoType,
+            OriginalETA: entity.EstimatedArrival,
+            ScheduledDeparture: entity.ScheduledDeparture,
+            TotalDeclaredValue: entity.DeclaredValue,
+            TotalWeightKg: entity.TotalWeightKg,
+            TotalVolumeM3: entity.TotalVolumeM3,
+            DriverId: entity.DriverId,
+            TruckId: entity.TruckId,
+            TruckType: truckType,
+            IsDelayed: entity.IsDelayed,
+            ExceptionReason: null // TODO: capturar razón del checkpoint
+        ), ct);
     }
 
     /// <summary>

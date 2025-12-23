@@ -6,13 +6,13 @@
 ![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
-![EF Core](https://img.shields.io/badge/EF%20Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona inventarios, flotas tipificadas, redes Hub & Spoke y documentación legal (Carta Porte) en un entorno Multi-tenant.
+Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona inventarios, flotas tipificadas, redes Hub & Spoke y documentación legal (Carta Porte) en un entorno Multi-tenant con **agentes de IA automatizados**.
 
-> **Estado:** Development Preview v0.5.5 - Business Rules + WMS/TMS Services
+> **Estado:** Development Preview v0.5.6 - n8n Integration + Webhooks + Notifications
 
 ---
 
@@ -20,7 +20,7 @@ Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona in
 
 **Parhelion-Logistics** es una plataforma SaaS multi-tenant de nivel Enterprise que unifica las capacidades de un WMS (Warehouse Management System) y un TMS (Transportation Management System). Diseñada para empresas de transporte B2B que requieren gestión integral: inventarios estáticos en almacén, flotas tipificadas (refrigerado, HAZMAT, blindado), redes de distribución Hub & Spoke, trazabilidad por checkpoints y documentación legal mexicana (Carta Porte, POD).
 
-**Objetivo Técnico:** Implementación de **Clean Architecture** y **Domain-Driven Design (DDD)** en un entorno de producción utilizando .NET 8, Angular, React, Docker y PostgreSQL.
+**Objetivo Técnico:** Implementación de **Clean Architecture** y **Domain-Driven Design (DDD)** en un entorno de producción utilizando .NET 8, Angular, React, Docker, PostgreSQL y **n8n** para automatización inteligente.
 
 ---
 
@@ -29,9 +29,10 @@ Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona in
 ### Core
 
 - [x] Documentacion de requerimientos y esquema de base de datos
+- [x] **[NUEVO]** [Guía de Webhooks y Automatización](./service-webhooks.md)
 - [x] **Arquitectura Base:** Configuracion de Clean Architecture y estructura de proyecto
 - [x] **Multi-tenancy:** Query Filters globales por TenantId
-- [x] **Domain Layer:** 23 entidades + 15 enumeraciones
+- [x] **Domain Layer:** 25 entidades + 17 enumeraciones
 - [x] **Infrastructure Layer:** EF Core + PostgreSQL + Migrations
 - [x] **API Skeleton:** 22 endpoints base para todas las entidades
 - [x] **Autenticacion:** JWT con roles SuperAdmin/Admin/Driver/Warehouse
@@ -44,6 +45,16 @@ Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona in
 - [x] **Camiones Tipificados:** DryBox, Refrigerado, HAZMAT, Plataforma, Blindado
 - [x] **Choferes:** Asignacion fija (default_truck) y dinamica (current_truck)
 - [x] **Bitacora de Flotilla:** Historial de cambios de vehiculo (FleetLog automático)
+- [x] **Telemetría GPS:** Campos LastLatitude/LastLongitude en Trucks
+- [x] **Búsqueda Geoespacial:** Endpoint `/api/drivers/nearby` (Haversine)
+
+### Automatización e Inteligencia (n8n)
+
+- [x] **Webhooks (Backend → n8n):** 5 tipos de eventos (ShipmentException, BookingRequest, HandshakeAttempt, StatusChanged, CheckpointCreated)
+- [x] **Notificaciones (n8n → Backend):** Push notifications persistidas para apps móviles
+- [x] **ServiceApiKey Multi-Tenant:** Autenticación de agentes IA por tenant con SHA256
+- [x] **Generación Automática:** API Key creada junto con cada nuevo Tenant
+- [x] **Agente Crisis Management:** Búsqueda de chofer cercano ante excepciones
 
 ### Red Logistica (Hub and Spoke)
 
@@ -82,6 +93,7 @@ Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona in
 | **Backend**              | C# / .NET 8 Web API                   | -           |
 | **Base de Datos**        | PostgreSQL 17                         | -           |
 | **ORM**                  | Entity Framework Core (Code First)    | -           |
+| **Automatización**       | n8n (Workflow Automation)             | Agentes IA  |
 | **Frontend (Admin)**     | Angular 18+ (Material Design)         | Admin       |
 | **Frontend (Operacion)** | React + Vite + Tailwind CSS (PWA)     | Almacenista |
 | **Frontend (Campo)**     | React + Vite + Tailwind CSS (PWA)     | Chofer      |
@@ -156,6 +168,43 @@ graph TD
     MM ==>|LineHaul| CC
     CC -->|LastMile| G
 ```
+
+### Integración n8n (Automatización)
+
+```mermaid
+flowchart LR
+    subgraph Backend["Parhelion API"]
+        API[Controllers]
+        WP[WebhookPublisher]
+        NC[NotificationsController]
+    end
+
+    subgraph n8n["n8n Workflows"]
+        WH{{Webhook Trigger}}
+        AI[/"AI Agent<br/>(Claude/GPT)"/]
+        HTTP[HTTP Request]
+    end
+
+    subgraph Mobile["Apps Móviles"]
+        APP[Driver App]
+    end
+
+    API -->|"shipment.exception"| WP
+    WP -->|"POST /webhook"| WH
+    WH --> AI
+    AI --> HTTP
+    HTTP -->|"POST /api/notifications"| NC
+    HTTP -->|"GET /api/drivers/nearby"| API
+    NC -.->|"Push Notification"| APP
+```
+
+**Flujo de Crisis Management:**
+
+1. Backend detecta `ShipmentStatus.Exception` → publica webhook
+2. n8n recibe evento → activa Agente IA
+3. Agente consulta `/api/drivers/nearby` con coordenadas del incidente
+4. Agente crea notificación para chofer de rescate
+5. App móvil recibe push notification
 
 ---
 
@@ -251,17 +300,18 @@ src/
 | v0.5.2     | 2025-12     | Services Implementation: 16 interfaces, 15 implementaciones |
 | v0.5.3     | 2025-12     | Integration Tests: 72 tests para Services                   |
 | v0.5.4     | 2025-12     | Swagger/OpenAPI, Business Logic Workflow                    |
-| **v0.5.5** | **2025-12** | **WMS/TMS Services, Business Rules, 122 tests**             |
+| v0.5.5     | 2025-12     | WMS/TMS Services, Business Rules, 122 tests                 |
+| **v0.5.6** | **2025-12** | **n8n Integration, Webhooks, Notifications, ServiceApiKey** |
 
 ### Próximas Versiones
 
 | Version    | Objetivo              | Características                                |
 | ---------- | --------------------- | ---------------------------------------------- |
-| v0.5.6     | Trazabilidad          | Endpoints de Checkpoints, Upload de documentos |
-| v0.5.7     | QR Handshake          | Transferencia de custodia digital              |
-| v0.5.8     | Rutas                 | Asignación de rutas, avance por pasos          |
-| v0.5.9     | Dashboard             | KPIs operativos, métricas por status           |
-| **v0.6.0** | **Perfeccionamiento** | **Bug fixes, E2E testing, optimización**       |
+| v0.5.7     | Trazabilidad          | Endpoints de Checkpoints, Upload de documentos |
+| v0.5.8     | QR Handshake          | Transferencia de custodia digital              |
+| v0.5.9     | Rutas                 | Asignación de rutas, avance por pasos          |
+| v0.6.0     | Dashboard             | KPIs operativos, métricas por status           |
+| **v0.7.0** | **Perfeccionamiento** | **Bug fixes, E2E testing, optimización**       |
 
 ---
 

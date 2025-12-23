@@ -107,9 +107,19 @@ public class TrucksController : ControllerBase
         return Ok(result.Data);
     }
 
+    [HttpPost("{id:guid}/location")]
+    public async Task<IActionResult> UpdateLocation(Guid id, [FromBody] UpdateTruckLocationRequest request)
+    {
+        var result = await _truckService.UpdateLocationAsync(id, request.Latitude, request.Longitude);
+        if (!result.Success) return NotFound(new { error = result.Message });
+        return Ok();
+    }
+
     private Guid? GetTenantId()
     {
         var claim = User.FindFirst("tenant_id");
         return claim != null && Guid.TryParse(claim.Value, out var id) ? id : null;
     }
 }
+
+public record UpdateTruckLocationRequest(decimal Latitude, decimal Longitude);

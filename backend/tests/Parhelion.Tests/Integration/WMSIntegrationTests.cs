@@ -117,6 +117,7 @@ public class WMSIntegrationTests : IClassFixture<ServiceTestFixture>
 
         // Assert: Should fail
         Assert.False(result.Success);
+        Assert.NotNull(result.Message);
         Assert.Contains("insuficiente", result.Message.ToLower());
     }
 }

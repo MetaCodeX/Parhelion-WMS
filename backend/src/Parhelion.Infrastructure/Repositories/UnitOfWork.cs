@@ -41,6 +41,8 @@ public class UnitOfWork : IUnitOfWork
     private ITenantRepository<NetworkLink>? _networkLinks;
     private ITenantRepository<RouteBlueprint>? _routeBlueprints;
     private IGenericRepository<RouteStep>? _routeSteps;
+    private IGenericRepository<Notification>? _notifications;
+    private ITenantRepository<ServiceApiKey>? _serviceApiKeys;
 
     public UnitOfWork(ParhelionDbContext context)
     {
@@ -122,6 +124,14 @@ public class UnitOfWork : IUnitOfWork
     
     public IGenericRepository<RouteStep> RouteSteps => 
         _routeSteps ??= new GenericRepository<RouteStep>(_context);
+
+    // ========== NOTIFICATION / N8N REPOSITORIES ==========
+    
+    public IGenericRepository<Notification> Notifications => 
+        _notifications ??= new GenericRepository<Notification>(_context);
+    
+    public ITenantRepository<ServiceApiKey> ServiceApiKeys => 
+        _serviceApiKeys ??= new TenantRepository<ServiceApiKey>(_context);
 
     // ========== TRANSACTION CONTROL ==========
 

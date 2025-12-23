@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Parhelion.API.Filters;
 using Parhelion.Application.DTOs.Common;
 using Parhelion.Application.DTOs.Shipment;
 using Parhelion.Application.Interfaces.Services;
@@ -192,8 +193,11 @@ public class ShipmentsController : ControllerBase
 
     /// <summary>
     /// Actualiza el estatus de un envío.
+    /// Soporta autenticación JWT o X-Service-Key/Bearer CallbackToken
     /// </summary>
     [HttpPatch("{id:guid}/status")]
+    [ServiceApiKey]
+    [AllowAnonymous] // Bypass [Authorize] de clase - ServiceApiKey valida
     public async Task<ActionResult<ShipmentResponse>> UpdateStatus(
         Guid id,
         [FromQuery] string status,
