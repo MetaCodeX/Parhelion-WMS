@@ -40,8 +40,8 @@ flowchart LR
 
 | #   | Objetivo                                                          | Versión     | Prioridad |
 | --- | ----------------------------------------------------------------- | ----------- | --------- |
-| 1   | **Health Monitoring** - Endpoints de estado y conectividad        | v0.6.0 ✅   | P0        |
-| 2   | **Database Integration** - Conexión async a PostgreSQL compartido | v0.6.0 ✅   | P0        |
+| 1   | **Health Monitoring** - Endpoints de estado y conectividad        | v0.6.0   | P0        |
+| 2   | **Database Integration** - Conexión async a PostgreSQL compartido | v0.6.0   | P0        |
 | 3   | **Service Auth** - Autenticación inter-servicios con .NET         | v0.6.0-beta | P0        |
 | 4   | **Shipment Analytics** - Métricas históricas de envíos            | v0.7.x      | P1        |
 | 5   | **Fleet Analytics** - KPIs de utilización de flota                | v0.7.x      | P1        |
@@ -67,44 +67,44 @@ service-python/
 │   ├── __init__.py             # Package metadata
 │   ├── main.py                 # FastAPI entry point
 │   │
-│   ├── domain/                 # 🔷 DOMAIN LAYER
+│   ├── domain/                 # DOMAIN LAYER
 │   │   ├── entities/           # (vacío - v0.7.x)
 │   │   ├── value_objects/      # (vacío - v0.7.x)
 │   │   ├── exceptions/         # (vacío - v0.7.x)
 │   │   └── interfaces/         # (vacío - v0.7.x)
 │   │
-│   ├── application/            # 🔶 APPLICATION LAYER
+│   ├── application/            # APPLICATION LAYER
 │   │   ├── dtos/               # (vacío - v0.7.x)
 │   │   ├── services/           # (vacío - v0.7.x)
 │   │   └── interfaces/         # (vacío - v0.7.x)
 │   │
-│   ├── infrastructure/         # 🔵 INFRASTRUCTURE LAYER
+│   ├── infrastructure/         # INFRASTRUCTURE LAYER
 │   │   ├── config/
-│   │   │   └── settings.py     # ✅ Pydantic Settings
+│   │   │   └── settings.py     # Pydantic Settings
 │   │   ├── database/
-│   │   │   └── connection.py   # ✅ SQLAlchemy async
+│   │   │   └── connection.py   # SQLAlchemy async
 │   │   └── external/           # (vacío - v0.6.0-beta)
 │   │
-│   └── api/                    # 🟢 API LAYER
+│   └── api/                    # API LAYER
 │       ├── routers/
-│       │   └── health.py       # ✅ /health, /health/db, /health/ready
+│       │   └── health.py       # /health, /health/db, /health/ready
 │       └── middleware/         # (vacío - v0.6.0-beta)
 │
 └── tests/
-    ├── conftest.py             # ✅ pytest fixtures
+    ├── conftest.py             # pytest fixtures
     └── unit/
-        └── test_health.py      # ✅ 4 tests pasando
+        └── test_health.py      # 4 tests pasando
 ```
 
 ### Componentes Implementados (v0.6.0-alpha)
 
 | Componente    | Archivo                                 | Estado |
 | ------------- | --------------------------------------- | ------ |
-| FastAPI App   | `main.py`                               | ✅     |
-| Settings      | `infrastructure/config/settings.py`     | ✅     |
-| DB Connection | `infrastructure/database/connection.py` | ✅     |
-| Health Router | `api/routers/health.py`                 | ✅     |
-| Unit Tests    | `tests/unit/test_health.py`             | ✅ 4/4 |
+| FastAPI App   | `main.py`                               |     |
+| Settings      | `infrastructure/config/settings.py`     |     |
+| DB Connection | `infrastructure/database/connection.py` |     |
+| Health Router | `api/routers/health.py`                 |     |
+| Unit Tests    | `tests/unit/test_health.py`             | 4/4 |
 
 ---
 
@@ -176,7 +176,7 @@ gantt
 
 | Release          | Nombre      | Entregables                                 |
 | ---------------- | ----------- | ------------------------------------------- |
-| **v0.6.0-alpha** | Foundation  | ✅ Estructura, health, DB connection, tests |
+| **v0.6.0-alpha** | Foundation  | Estructura, health, DB connection, tests |
 | v0.6.0-beta      | Integration | Auth middleware, ParhelionApiClient (ACL)   |
 | v0.6.0-rc.1      | Validation  | E2E tests, logging estructurado             |
 | **v0.6.0**       | Release     | GitHub Actions, docs actualizadas           |
@@ -332,9 +332,9 @@ GET  /api/py/dashboard/realtime           # Métricas tiempo real
 
 | Variable               | Requerida | Default                     | Descripción                 |
 | ---------------------- | --------- | --------------------------- | --------------------------- |
-| `DATABASE_URL`         | ✅        | -                           | PostgreSQL async connection |
-| `JWT_SECRET`           | ✅        | -                           | Secret para validar tokens  |
-| `INTERNAL_SERVICE_KEY` | ✅        | -                           | Auth inter-servicios        |
+| `DATABASE_URL`         |        | -                           | PostgreSQL async connection |
+| `JWT_SECRET`           |        | -                           | Secret para validar tokens  |
+| `INTERNAL_SERVICE_KEY` |        | -                           | Auth inter-servicios        |
 | `PARHELION_API_URL`    | No        | `http://parhelion-api:5000` | URL del API .NET            |
 | `ENVIRONMENT`          | No        | `development`               | dev/production/testing      |
 | `LOG_LEVEL`            | No        | `info`                      | debug/info/warning/error    |

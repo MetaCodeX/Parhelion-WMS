@@ -104,64 +104,19 @@ Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona in
 
 ---
 
-## 🐍 Python Analytics Service (v0.6.0+)
+## Python Analytics Service (v0.6.0)
 
-Microservicio dedicado para **análisis avanzado, predicciones ML y reportes**. Implementado con Clean Architecture en Python.
+Microservicio dedicado para analisis avanzado, predicciones ML y reportes. Implementado con Clean Architecture en Python.
 
-### Arquitectura
+Para documentacion completa del servicio, ver [python-analytics.md](./python-analytics.md).
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Docker Network                            │
-│                                                              │
-│  ┌─────────────┐       ┌─────────────┐       ┌───────────┐  │
-│  │  .NET API   │◄─────►│   Python    │◄─────►│ PostgreSQL│  │
-│  │   :5000     │ REST  │   :8000     │ async │   :5432   │  │
-│  └──────┬──────┘       └──────┬──────┘       └───────────┘  │
-│         │                     │                              │
-│         └─────────┬───────────┘                              │
-│                   ▼                                          │
-│            ┌───────────┐                                     │
-│            │    n8n    │ (Workflows + IA)                    │
-│            │   :5678   │                                     │
-│            └───────────┘                                     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Capacidades
-
-| Módulo                 | Descripción                                        | Estado    |
-| ---------------------- | -------------------------------------------------- | --------- |
-| **Health Monitoring**  | Endpoints `/health`, `/health/db`, `/health/ready` | ✅ v0.6.0 |
-| **Shipment Analytics** | Métricas históricas por período, tenant, ruta      | 📋 v0.7.x |
-| **Fleet Analytics**    | KPIs de ocupación, tiempo muerto, distancia        | 📋 v0.7.x |
-| **ETA Prediction**     | Modelo ML basado en historial de checkpoints       | 📋 v0.8.x |
-| **Excel Reports**      | Generación dinámica con pandas + openpyxl          | 📋 v0.9.x |
-
-### Endpoints Python
-
-```bash
-GET  /health                    # Estado del servicio
-GET  /health/db                 # Conectividad PostgreSQL
-GET  /health/ready              # Readiness probe
-
-# Próximamente (v0.7.x+)
-GET  /api/py/analytics/shipments
-GET  /api/py/analytics/fleet
-POST /api/py/predictions/eta
-POST /api/py/reports/export
-```
-
-### Tecnologías
-
-| Componente | Tecnología               |
-| ---------- | ------------------------ |
-| Framework  | FastAPI 0.115+           |
-| Runtime    | Python 3.12              |
-| ORM        | SQLAlchemy 2.0 + asyncpg |
-| Validación | Pydantic v2              |
-| Testing    | pytest + pytest-asyncio  |
-| Linting    | Ruff + MyPy              |
+| Componente | Tecnologia               | Estado  |
+| ---------- | ------------------------ | ------- |
+| Framework  | FastAPI 0.115+           | Activo  |
+| Runtime    | Python 3.12              | Activo  |
+| ORM        | SQLAlchemy 2.0 + asyncpg | Activo  |
+| Testing    | pytest + pytest-asyncio  | 4 tests |
+| Container  | parhelion-python:8000    | Healthy |
 
 ---
 
@@ -298,7 +253,7 @@ flowchart LR
 | ORM        | Entity Framework Core                 | 8.0.10      |
 | Provider   | Npgsql.EntityFrameworkCore.PostgreSQL | 8.0.10      |
 | Database   | PostgreSQL                            | 17 (Docker) |
-| Migrations | Code First                            | ✅          |
+| Migrations | Code First                            |           |
 
 ### Características de Seguridad
 
@@ -328,7 +283,7 @@ backend/src/
 ├── Parhelion.Infrastructure/ # Persistencia: DbContext, Repositorios, Migraciones
 └── Parhelion.API/            # Entrada: Controllers, JWT Config, DI
 
-service-python/               # 🐍 Microservicio Python (Analytics & Predictions)
+service-python/               # Microservicio Python (Analytics & Predictions)
 ├── src/parhelion_py/         # Clean Architecture: domain, application, infrastructure, api
 │   ├── domain/               # Entidades, Value Objects, Interfaces
 │   ├── application/          # DTOs, Services, Use Cases
@@ -341,14 +296,14 @@ service-python/               # 🐍 Microservicio Python (Analytics & Predictio
 
 ## Documentacion
 
-| Documento                                        | Descripcion                                       |
-| :----------------------------------------------- | :------------------------------------------------ |
-| [Requerimientos (MVP)](./requirments.md)         | Especificacion funcional completa del sistema     |
-| [Esquema de Base de Datos](./database-schema.md) | Diagrama ER, entidades y reglas de negocio        |
-| [Arquitectura de API](./api-architecture.md)     | Estructura de capas y endpoints (.NET + Python)   |
-| [Python Analytics](./python-analytics.md)        | 🐍 Roadmap, 10 objetivos, estructura del servicio |
-| [Guía de Webhooks](./service-webhooks.md)        | Integración n8n, eventos y notificaciones         |
-| [CHANGELOG](./CHANGELOG.md)                      | Historial detallado de todas las versiones        |
+| Documento                                        | Descripcion                                     |
+| :----------------------------------------------- | :---------------------------------------------- |
+| [Requerimientos (MVP)](./requirments.md)         | Especificacion funcional completa del sistema   |
+| [Esquema de Base de Datos](./database-schema.md) | Diagrama ER, entidades y reglas de negocio      |
+| [Arquitectura de API](./api-architecture.md)     | Estructura de capas y endpoints (.NET + Python) |
+| [Python Analytics](./python-analytics.md)        | Roadmap, 10 objetivos, estructura del servicio  |
+| [Guia de Webhooks](./service-webhooks.md)        | Integracion n8n, eventos y notificaciones       |
+| [CHANGELOG](./CHANGELOG.md)                      | Historial detallado de todas las versiones      |
 
 ---
 

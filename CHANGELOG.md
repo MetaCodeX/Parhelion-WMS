@@ -747,8 +747,8 @@ Ejemplo: 0.6.0-alpha.1+build.2025.12.28
 
 ## Próximos Pasos
 
-1. ~~Implementar Domain Layer (entidades)~~ ✅
-2. ~~Configurar Infrastructure Layer (EF Core)~~ ✅
+1. ~~Implementar Domain Layer (entidades)~~
+2. ~~Configurar Infrastructure Layer (EF Core)~~
 3. Crear API endpoints básicos (CRUD)
 4. Implementar autenticación JWT
 5. Diseñar UI del Admin
