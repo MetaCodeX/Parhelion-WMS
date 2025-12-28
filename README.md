@@ -253,7 +253,7 @@ flowchart LR
 | ORM        | Entity Framework Core                 | 8.0.10      |
 | Provider   | Npgsql.EntityFrameworkCore.PostgreSQL | 8.0.10      |
 | Database   | PostgreSQL                            | 17 (Docker) |
-| Migrations | Code First                            |           |
+| Migrations | Code First                            |             |
 
 ### Características de Seguridad
 
@@ -360,9 +360,9 @@ service-python/               # Microservicio Python (Analytics & Predictions)
 | v0.6.0-rc.1      | `validation`  | Tests de integración, documentación                |
 | **v0.6.0**       | `Python Core` | Release estable con microservicio Python integrado |
 
-### Próximas Versiones (v0.7.x - v1.0.0)
+### Proximas Versiones (v0.7.0-v1.0.0)
 
-#### v0.7.x - Operaciones de Campo (QR + Rutas)
+#### v0.7.0-v0.7.4: Operaciones de Campo (QR + Rutas)
 
 | Version | Feature          | Descripción                                        |
 | ------- | ---------------- | -------------------------------------------------- |
@@ -372,7 +372,7 @@ service-python/               # Microservicio Python (Analytics & Predictions)
 | v0.7.3  | Route Assignment | Asignación de rutas predefinidas a shipments       |
 | v0.7.4  | Route Progress   | Avance automático por pasos de ruta                |
 
-#### v0.8.x - Frontend Admin Panel (Angular)
+#### v0.8.0-v0.8.5: Frontend Admin Panel (Angular)
 
 | Version | Feature           | Descripción                                   |
 | ------- | ----------------- | --------------------------------------------- |
@@ -383,7 +383,7 @@ service-python/               # Microservicio Python (Analytics & Predictions)
 | v0.8.4  | Shipment Tracking | Timeline de checkpoints, status updates       |
 | v0.8.5  | Network CRUD      | Gestión de Locations, Routes, NetworkLinks    |
 
-#### v0.9.x - Frontend PWAs + Dashboard
+#### v0.9.0-v0.9.6: Frontend PWAs + Dashboard
 
 | Version | Feature              | Descripción                                    |
 | ------- | -------------------- | ---------------------------------------------- |

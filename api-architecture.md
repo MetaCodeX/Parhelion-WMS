@@ -201,14 +201,17 @@ o `Authorization: Bearer <jwt>` para llamadas desde n8n.
 
 ### Comunicación Inter-Servicios
 
-```
-┌─────────────┐     REST/JSON      ┌─────────────┐
-│   .NET API  │◄──────────────────►│   Python    │
-│    :5000    │  Internal JWT/Key  │    :8000    │
-└──────┬──────┘                    └──────┬──────┘
-       │                                  │
-       └──────────► PostgreSQL ◄──────────┘
-                      :5432
+```mermaid
+flowchart LR
+    subgraph Docker["Docker Network"]
+        NET[".NET API<br/>:5000"]
+        PY["Python Analytics<br/>:8000"]
+        DB[(PostgreSQL<br/>:5432)]
+    end
+
+    NET <-->|"REST/JSON<br/>Internal JWT"| PY
+    NET --> DB
+    PY --> DB
 ```
 
 ---

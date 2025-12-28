@@ -40,8 +40,8 @@ flowchart LR
 
 | #   | Objetivo                                                          | Versión     | Prioridad |
 | --- | ----------------------------------------------------------------- | ----------- | --------- |
-| 1   | **Health Monitoring** - Endpoints de estado y conectividad        | v0.6.0   | P0        |
-| 2   | **Database Integration** - Conexión async a PostgreSQL compartido | v0.6.0   | P0        |
+| 1   | **Health Monitoring** - Endpoints de estado y conectividad        | v0.6.0      | P0        |
+| 2   | **Database Integration** - Conexión async a PostgreSQL compartido | v0.6.0      | P0        |
 | 3   | **Service Auth** - Autenticación inter-servicios con .NET         | v0.6.0-beta | P0        |
 | 4   | **Shipment Analytics** - Métricas históricas de envíos            | v0.7.x      | P1        |
 | 5   | **Fleet Analytics** - KPIs de utilización de flota                | v0.7.x      | P1        |
@@ -98,17 +98,17 @@ service-python/
 
 ### Componentes Implementados (v0.6.0-alpha)
 
-| Componente    | Archivo                                 | Estado |
-| ------------- | --------------------------------------- | ------ |
-| FastAPI App   | `main.py`                               |     |
-| Settings      | `infrastructure/config/settings.py`     |     |
-| DB Connection | `infrastructure/database/connection.py` |     |
-| Health Router | `api/routers/health.py`                 |     |
-| Unit Tests    | `tests/unit/test_health.py`             | 4/4 |
+| Componente    | Archivo                                 | Estado       |
+| ------------- | --------------------------------------- | ------------ |
+| FastAPI App   | `main.py`                               | Implementado |
+| Settings      | `infrastructure/config/settings.py`     | Implementado |
+| DB Connection | `infrastructure/database/connection.py` | Implementado |
+| Health Router | `api/routers/health.py`                 | Implementado |
+| Unit Tests    | `tests/unit/test_health.py`             | 4/4 pasando  |
 
 ---
 
-## 4. Estructura Planeada (v0.7.x - v0.9.x)
+## 4. Estructura Planeada (v0.7.0-v0.9.6)
 
 ```
 service-python/src/parhelion_py/
@@ -159,14 +159,15 @@ service-python/src/parhelion_py/
 
 ---
 
-## 5. Roadmap de Desarrollo
+## 5. Roadmap del Servicio Python (v0.6.0)
 
-### v0.6.x - Foundation (EN PROGRESO)
+El siguiente roadmap aplica exclusivamente al desarrollo del microservicio Python Analytics.
+Para el roadmap completo del proyecto (v0.7.0-v1.0.0), consultar [README.md](./README.md#roadmap).
 
 ```mermaid
 gantt
-    title Python Service v0.6.x
-    dateFormat  YYYY-MM-DD
+    title Python Analytics Service - v0.6.0
+    dateFormat YYYY-MM-DD
     section Foundation
     v0.6.0-alpha    :done, a1, 2025-12-28, 1d
     v0.6.0-beta     :active, a2, after a1, 3d
@@ -174,96 +175,73 @@ gantt
     v0.6.0          :milestone, after a3, 0d
 ```
 
-| Release          | Nombre      | Entregables                                 |
-| ---------------- | ----------- | ------------------------------------------- |
-| **v0.6.0-alpha** | Foundation  | Estructura, health, DB connection, tests |
-| v0.6.0-beta      | Integration | Auth middleware, ParhelionApiClient (ACL)   |
-| v0.6.0-rc.1      | Validation  | E2E tests, logging estructurado             |
-| **v0.6.0**       | Release     | GitHub Actions, docs actualizadas           |
+| Release      | Nombre      | Entregables                                                       |
+| ------------ | ----------- | ----------------------------------------------------------------- |
+| v0.6.0-alpha | Foundation  | Estructura base, health endpoints, conexion DB, 4 tests unitarios |
+| v0.6.0-beta  | Integration | Middleware de autenticacion, ParhelionApiClient (ACL), logging    |
+| v0.6.0-rc.1  | Validation  | Tests E2E, documentacion final, security review                   |
+| v0.6.0       | Release     | CI/CD Python en GitHub Actions, merge a develop                   |
 
 ---
 
-### v0.7.x - Analytics Core
+## 6. Arquitectura de Capas (Clean Architecture)
 
-| Release | Feature                 | Endpoints                               |
-| ------- | ----------------------- | --------------------------------------- |
-| v0.7.0  | Shipment Analytics Base | `GET /api/py/analytics/shipments`       |
-| v0.7.1  | Fleet Analytics Base    | `GET /api/py/analytics/fleet`           |
-| v0.7.2  | Filtros Avanzados       | Query params: date, status, driver      |
-| v0.7.3  | Aggregations            | Métricas por período, tenant            |
-| v0.7.4  | Caching                 | Redis/in-memory para queries frecuentes |
+```mermaid
+flowchart TB
+    subgraph API["API Layer - FastAPI"]
+        direction LR
+        R1[Health Router]
+        R2[Analytics Router]
+        R3[Predictions Router]
+        R4[Reports Router]
+        MW[Middleware]
+    end
 
----
+    subgraph APP["Application Layer"]
+        direction LR
+        S1[AnalyticsService]
+        S2[PredictionService]
+        S3[ReportService]
+        DTO[DTOs]
+    end
 
-### v0.8.x - Machine Learning
+    subgraph DOM["Domain Layer"]
+        direction LR
+        ENT[Entities]
+        VO[Value Objects]
+        INT[Interfaces]
+    end
 
-| Release | Feature             | Modelo                   |
-| ------- | ------------------- | ------------------------ |
-| v0.8.0  | ETA Prediction Base | Regresión lineal         |
-| v0.8.1  | Feature Engineering | Historial de checkpoints |
-| v0.8.2  | Model Improvement   | Gradient Boosting        |
-| v0.8.3  | Anomaly Detection   | Isolation Forest         |
-| v0.8.4  | Confidence Scoring  | Intervalos de predicción |
+    subgraph INF["Infrastructure Layer"]
+        direction LR
+        DB[Database]
+        EXT[External Clients]
+        CFG[Config]
+    end
 
----
+    subgraph EXTERNAL["External Systems"]
+        PG[(PostgreSQL)]
+        NET[".NET API"]
+    end
 
-### v0.9.x - Reports & Dashboard
-
-| Release | Feature             | Output                   |
-| ------- | ------------------- | ------------------------ |
-| v0.9.0  | Excel Base          | pandas + openpyxl        |
-| v0.9.1  | Report Templates    | Diario, Semanal, Mensual |
-| v0.9.2  | Dashboard Endpoints | KPIs en JSON             |
-| v0.9.3  | Real-time Metrics   | WebSocket support        |
-| v0.9.4  | n8n Callbacks       | Event-driven analytics   |
-
----
-
-## 6. Diagrama de Capas (Clean Architecture)
-
+    R1 & R2 & R3 & R4 --> MW
+    MW --> S1 & S2 & S3
+    S1 & S2 & S3 --> DTO
+    DTO --> ENT & VO
+    ENT & VO --> INT
+    INT --> DB & EXT
+    DB --> PG
+    EXT --> NET
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        API LAYER                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
-│  │   Health    │  │  Analytics  │  │ Predictions │          │
-│  │   Router    │  │   Router    │  │   Router    │          │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘          │
-│         │                │                │                  │
-│  ┌──────┴────────────────┴────────────────┴──────┐          │
-│  │              Middleware (Auth, Tenant)         │          │
-│  └────────────────────────┬──────────────────────┘          │
-├───────────────────────────┼─────────────────────────────────┤
-│                           ▼                                  │
-│                  APPLICATION LAYER                           │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
-│  │  Analytics  │  │ Prediction  │  │   Report    │          │
-│  │   Service   │  │   Service   │  │   Service   │          │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘          │
-│         │                │                │                  │
-│  ┌──────┴────────────────┴────────────────┴──────┐          │
-│  │                    DTOs                        │          │
-│  └────────────────────────┬──────────────────────┘          │
-├───────────────────────────┼─────────────────────────────────┤
-│                           ▼                                  │
-│                    DOMAIN LAYER                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
-│  │  Entities   │  │    Value    │  │ Interfaces  │          │
-│  │             │  │   Objects   │  │   (Ports)   │          │
-│  └─────────────┘  └─────────────┘  └──────┬──────┘          │
-├───────────────────────────────────────────┼─────────────────┤
-│                                           ▼                  │
-│                 INFRASTRUCTURE LAYER                         │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
-│  │  Database   │  │  External   │  │   Config    │          │
-│  │ (Adapters)  │  │  Clients    │  │  (Settings) │          │
-│  └──────┬──────┘  └──────┬──────┘  └─────────────┘          │
-│         │                │                                   │
-│         ▼                ▼                                   │
-│  ┌─────────────┐  ┌─────────────┐                           │
-│  │ PostgreSQL  │  │  .NET API   │                           │
-│  └─────────────┘  └─────────────┘                           │
-└─────────────────────────────────────────────────────────────┘
-```
+
+### Principios de Diseno
+
+| Principio             | Implementacion                                          |
+| --------------------- | ------------------------------------------------------- |
+| Dependency Inversion  | Domain define interfaces, Infrastructure las implementa |
+| Single Responsibility | Cada servicio maneja un caso de uso especifico          |
+| Interface Segregation | Interfaces pequenas y especificas por funcionalidad     |
+| Open/Closed           | Nuevos routers sin modificar codigo existente           |
 
 ---
 
@@ -332,9 +310,9 @@ GET  /api/py/dashboard/realtime           # Métricas tiempo real
 
 | Variable               | Requerida | Default                     | Descripción                 |
 | ---------------------- | --------- | --------------------------- | --------------------------- |
-| `DATABASE_URL`         |        | -                           | PostgreSQL async connection |
-| `JWT_SECRET`           |        | -                           | Secret para validar tokens  |
-| `INTERNAL_SERVICE_KEY` |        | -                           | Auth inter-servicios        |
+| `DATABASE_URL`         |           | -                           | PostgreSQL async connection |
+| `JWT_SECRET`           |           | -                           | Secret para validar tokens  |
+| `INTERNAL_SERVICE_KEY` |           | -                           | Auth inter-servicios        |
 | `PARHELION_API_URL`    | No        | `http://parhelion-api:5000` | URL del API .NET            |
 | `ENVIRONMENT`          | No        | `development`               | dev/production/testing      |
 | `LOG_LEVEL`            | No        | `info`                      | debug/info/warning/error    |

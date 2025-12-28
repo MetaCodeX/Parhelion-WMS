@@ -139,20 +139,14 @@ Cuando n8n necesita llamar al Python Service:
 
 ### 6.4 Ejemplo: Workflow n8n con Python
 
-```
-[Webhook Trigger]
-      ↓
-[shipment.exception received]
-      ↓
-[HTTP Request → Python]
-  POST /api/py/predictions/eta
-  { shipmentId, currentLocation }
-      ↓
-[Receive ETA prediction]
-      ↓
-[HTTP Request → .NET API]
-  POST /api/notifications
-  { driverId, message: "ETA actualizado" }
+```mermaid
+flowchart TD
+    A[Webhook Trigger] --> B[shipment.exception received]
+    B --> C[HTTP Request a Python]
+    C --> D["POST /api/py/predictions/eta<br/>{shipmentId, currentLocation}"]
+    D --> E[Receive ETA prediction]
+    E --> F[HTTP Request a .NET API]
+    F --> G["POST /api/notifications<br/>{driverId, message}"]
 ```
 
 ---
