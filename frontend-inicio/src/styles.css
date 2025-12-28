@@ -1,26 +1,26 @@
 /* ===== PARHELION DESIGN SYSTEM - NEO-BRUTALISM ===== */
 
-@import url('https://fonts.googleapis.com/css2?family=New+Rocker&family=Merriweather:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=New+Rocker&family=Merriweather:wght@700;900&family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
   /* Color Palette - Industrial Solar */
-  --parhelion-oxide: #C85A17;
-  --parhelion-oxide-dark: #A84810;
-  --parhelion-oxide-light: #E8721F;
-  --parhelion-white: #FAFAFA;
+  --parhelion-oxide: #c85a17;
+  --parhelion-oxide-dark: #a84810;
+  --parhelion-oxide-light: #e8721f;
+  --parhelion-white: #fafafa;
   --parhelion-black: #000000;
-  --parhelion-sand: #E8E6E1;
+  --parhelion-sand: #e8e6e1;
   --parhelion-gray: #333333;
-  --parhelion-slate: #2C3E50;
-  --parhelion-success: #10B981;
-  --parhelion-warning: #F59E0B;
-  --parhelion-info: #3B82F6;
-  
+  --parhelion-slate: #2c3e50;
+  --parhelion-success: #10b981;
+  --parhelion-warning: #f59e0b;
+  --parhelion-info: #3b82f6;
+
   /* Typography */
-  --font-logo: 'New Rocker', cursive;
-  --font-heading: 'Merriweather', Georgia, serif;
-  --font-body: 'Inter', system-ui, sans-serif;
-  
+  --font-logo: "New Rocker", cursive;
+  --font-heading: "Merriweather", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
   /* Neo-Brutalism */
   --border-width: 2px;
   --shadow-offset: 4px;
@@ -47,7 +47,12 @@ body {
 
 /* ===== TYPOGRAPHY ===== */
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   font-weight: 900;
   color: var(--parhelion-black);
@@ -106,7 +111,8 @@ h1, h2, h3, h4, h5, h6 {
 .btn-lg {
   padding: 18px 36px;
   font-size: 1rem;
-  box-shadow: var(--shadow-offset-lg) var(--shadow-offset-lg) 0 var(--parhelion-black);
+  box-shadow: var(--shadow-offset-lg) var(--shadow-offset-lg) 0
+    var(--parhelion-black);
 }
 
 /* ===== NEO-BRUTALIST BADGE ===== */
@@ -141,8 +147,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes pulse-badge {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 /* ===== NEO-BRUTALIST CARD ===== */
@@ -200,8 +211,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 /* ===== CAROUSEL ===== */
@@ -259,7 +274,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .progress-bar::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -268,15 +283,19 @@ h1, h2, h3, h4, h5, h6 {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255,255,255,0.3) 50%,
+    rgba(255, 255, 255, 0.3) 50%,
     transparent 100%
   );
   animation: shimmer 2s infinite;
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* ===== TABS ===== */
@@ -328,8 +347,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ===== ALERT ===== */
@@ -343,14 +368,28 @@ h1, h2, h3, h4, h5, h6 {
   animation: slideIn 0.4s ease;
 }
 
-.alert-success { background-color: #D1FAE5; }
-.alert-warning { background-color: #FEF3C7; }
-.alert-info { background-color: #DBEAFE; }
-.alert-oxide { background-color: #FED7AA; }
+.alert-success {
+  background-color: #d1fae5;
+}
+.alert-warning {
+  background-color: #fef3c7;
+}
+.alert-info {
+  background-color: #dbeafe;
+}
+.alert-oxide {
+  background-color: #fed7aa;
+}
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* ===== ACCORDION ===== */
@@ -421,27 +460,35 @@ h1, h2, h3, h4, h5, h6 {
   object-fit: cover;
 }
 
-/* ===== ANIMATED GRID BACKGROUND ===== */
+/* ===== ANIMATED GRID BACKGROUND (STABLE) ===== */
 
 .grid-background {
   position: fixed;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.15;
-  background-image: 
-    linear-gradient(rgba(200, 90, 23, 0.5) 2px, transparent 2px),
-    linear-gradient(90deg, rgba(200, 90, 23, 0.5) 2px, transparent 2px);
-  background-size: 50px 50px;
-  animation: grid-move var(--grid-duration, 40s) linear infinite;
+  opacity: 0.12;
+  overflow: hidden;
+  /* GPU acceleration for smoother animation */
+  transform: translateZ(0);
+  will-change: background-position;
+  backface-visibility: hidden;
+  background-image: linear-gradient(rgba(200, 90, 23, 0.6) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 90, 23, 0.6) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: grid-drift 60s linear infinite;
 }
 
-@keyframes grid-move {
-  0% { transform: translate(0, 0) rotate(0deg); }
-  100% { transform: translate(var(--grid-x, 100px), var(--grid-y, 100px)) rotate(2deg); }
+@keyframes grid-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 40px 40px;
+  }
 }
 
 .content-layer {
@@ -456,8 +503,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 /* ===== SECTION STYLING ===== */
@@ -538,7 +590,7 @@ section {
   border-left: 2px solid var(--parhelion-black);
 }
 
-.tab-trigger:nth-last-child(-n+2) {
+.tab-trigger:nth-last-child(-n + 2) {
   border-bottom: none;
 }
 
@@ -605,31 +657,31 @@ section {
     padding: 12px 20px;
     font-size: 0.8rem;
   }
-  
+
   .btn-lg {
     padding: 14px 24px;
     font-size: 0.85rem;
   }
-  
+
   .badge {
     padding: 4px 10px;
     font-size: 0.65rem;
   }
-  
+
   section {
     padding: 2.5rem 1.25rem;
   }
-  
+
   .section-title {
     font-size: 1.5rem;
   }
-  
+
   .card-header {
     flex-direction: row;
     align-items: center !important;
     gap: 0;
   }
-  
+
   .alert {
     flex-direction: row;
     gap: 0.75rem;
@@ -644,39 +696,39 @@ section {
     font-size: 0.9rem;
     gap: 0.5rem;
   }
-  
+
   .btn svg {
     width: 20px;
     height: 20px;
   }
-  
+
   .btn-lg {
     padding: 16px 32px;
     font-size: 0.95rem;
   }
-  
+
   .badge {
     padding: 4px 10px;
     font-size: 0.7rem;
   }
-  
+
   section {
     padding: 3rem 1.5rem;
   }
-  
+
   .section-title {
     font-size: 1.75rem;
     margin-bottom: 1.5rem;
   }
-  
+
   .marquee span {
     font-size: 0.85rem;
   }
-  
+
   .tabs-list {
     flex-wrap: nowrap;
   }
-  
+
   .tab-trigger {
     flex: 1;
     padding: 12px 16px;
@@ -684,54 +736,54 @@ section {
     border-bottom: none;
     border-right: 2px solid var(--parhelion-black);
   }
-  
+
   .tab-trigger:nth-child(2n) {
     border-left: none;
   }
-  
+
   .tab-trigger:last-child {
     border-right: none;
   }
-  
+
   .tab-content {
     padding: 1.25rem;
   }
-  
+
   .card-header {
     padding: 1rem 1.25rem;
   }
-  
+
   .card-header h3 {
     font-size: 1rem !important;
   }
-  
+
   .card-content {
     padding: 1rem 1.25rem;
     font-size: 0.9rem;
   }
-  
+
   .carousel-slide {
     padding: 1.25rem;
   }
-  
+
   .carousel-dot {
     width: 12px;
     height: 12px;
   }
-  
+
   .progress-container {
     height: 22px;
   }
-  
+
   .accordion-trigger {
     padding: 1rem 1.25rem;
     font-size: 1rem;
   }
-  
+
   .accordion-content-inner {
     padding: 1.25rem;
   }
-  
+
   .accordion-content-inner p {
     font-size: 0.95rem;
   }
@@ -744,56 +796,56 @@ section {
     padding: 14px 28px;
     font-size: 0.9rem;
   }
-  
+
   .btn svg {
     width: 22px;
     height: 22px;
   }
-  
+
   .btn-lg {
     padding: 18px 36px;
     font-size: 1rem;
   }
-  
+
   section {
     padding: 4rem 2rem;
   }
-  
+
   .section-title {
     font-size: 2rem;
     margin-bottom: 2rem;
   }
-  
+
   .marquee span {
     font-size: 0.9rem;
   }
-  
+
   .tab-trigger {
     padding: 12px 20px;
     font-size: 0.85rem;
   }
-  
+
   .tab-content {
     padding: 1.5rem;
   }
-  
+
   .card-header {
     padding: 1.25rem;
   }
-  
+
   .card-header h3 {
     font-size: 1.1rem !important;
   }
-  
+
   .card-content {
     padding: 1.25rem;
     font-size: 0.95rem;
   }
-  
+
   .carousel-slide {
     padding: 1.5rem;
   }
-  
+
   .progress-container {
     height: 24px;
   }
@@ -805,7 +857,7 @@ section {
   section {
     padding: 5rem 2rem;
   }
-  
+
   .section-title {
     font-size: 2.25rem;
   }
@@ -816,19 +868,21 @@ section {
 @media (hover: none) and (pointer: coarse) {
   .btn:hover {
     transform: none;
-    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--parhelion-black);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0
+      var(--parhelion-black);
   }
-  
+
   .btn:active {
     transform: translate(2px, 2px);
     box-shadow: 2px 2px 0 var(--parhelion-black);
   }
-  
+
   .card:hover {
     transform: none;
-    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--parhelion-black);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0
+      var(--parhelion-black);
   }
-  
+
   .carousel-dot {
     width: 14px;
     height: 14px;
@@ -843,15 +897,15 @@ section {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
+
   .marquee {
     animation: none;
   }
-  
+
   .grid-background {
     animation: none;
   }
-  
+
   .float {
     animation: none;
   }

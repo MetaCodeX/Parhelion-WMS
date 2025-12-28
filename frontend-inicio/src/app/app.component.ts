@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -13,25 +13,25 @@ import { CommonModule } from '@angular/common';
       <!-- MARQUEE - Announcement Banner -->
       <div class="marquee-container">
         <div class="marquee">
-          <span>★ PARHELION v0.5.7 RELEASED</span>
+          <span>★ PARHELION v0.6.0-alpha RELEASED</span>
           <span>•</span>
-          <span>Dynamic PDF Generation</span>
+          <span>Python Analytics Service</span>
           <span>•</span>
-          <span>Checkpoint Timeline</span>
+          <span>FastAPI + SQLAlchemy</span>
           <span>•</span>
-          <span>POD Digital Signatures</span>
+          <span>Clean Architecture</span>
           <span>•</span>
-          <span>n8n AI Integration</span>
+          <span>Multi-Service Docker</span>
           <span>•</span>
-          <span>★ PARHELION v0.5.7 RELEASED</span>
+          <span>★ PARHELION v0.6.0-alpha RELEASED</span>
           <span>•</span>
-          <span>Dynamic PDF Generation</span>
+          <span>Python Analytics Service</span>
           <span>•</span>
-          <span>Checkpoint Timeline</span>
+          <span>FastAPI + SQLAlchemy</span>
           <span>•</span>
-          <span>POD Digital Signatures</span>
+          <span>Clean Architecture</span>
           <span>•</span>
-          <span>n8n AI Integration</span>
+          <span>Multi-Service Docker</span>
           <span>•</span>
         </div>
       </div>
@@ -45,8 +45,8 @@ import { CommonModule } from '@angular/common';
           </div>
           
           <div class="badges">
-            <span class="badge badge-new">NEW v0.5.7</span>
-            <span class="badge badge-oxide">Enterprise</span>
+            <span class="badge badge-new">NEW v0.6.0</span>
+            <span class="badge badge-oxide">Python + .NET</span>
             <span class="badge">Multi-tenant</span>
           </div>
 
@@ -299,6 +299,22 @@ import { CommonModule } from '@angular/common';
               <div class="changelog-item">
                 <div class="changelog-header">
                   <span class="badge badge-new">NEW</span>
+                  <h3>v0.6.0-alpha</h3>
+                </div>
+                <p class="changelog-date">2025-12-28</p>
+                <ul>
+                  <li>Python Analytics Service (FastAPI + SQLAlchemy)</li>
+                  <li>Clean Architecture: domain, application, infrastructure</li>
+                  <li>Async PostgreSQL connection (asyncpg)</li>
+                  <li>Multi-service Docker deployment (9 containers)</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="carousel-slide">
+              <div class="changelog-item">
+                <div class="changelog-header">
+                  <span class="badge badge-oxide">PDFs</span>
                   <h3>v0.5.7</h3>
                 </div>
                 <p class="changelog-date">2025-12-23</p>
@@ -427,7 +443,7 @@ import { CommonModule } from '@angular/common';
           
           <div class="carousel-nav">
             <button 
-              *ngFor="let slide of [0,1,2,3,4,5,6,7]; let i = index"
+              *ngFor="let slide of [0,1,2,3,4,5,6,7,8]; let i = index"
               class="carousel-dot"
               [class.active]="currentSlide === i"
               (click)="currentSlide = i"
@@ -448,14 +464,13 @@ import { CommonModule } from '@angular/common';
             </button>
             <div class="accordion-content">
               <div class="accordion-content-inner">
-                <p><strong>Framework:</strong> ASP.NET Core 8 Web API</p>
-                <p><strong>ORM:</strong> Entity Framework Core (Code First)</p>
+                <p><strong>.NET:</strong> ASP.NET Core 8 Web API</p>
+                <p><strong>Python:</strong> FastAPI 0.115+ Analytics Service</p>
+                <p><strong>ORM:</strong> EF Core + SQLAlchemy (async)</p>
                 <p><strong>Database:</strong> PostgreSQL 17</p>
-                <p><strong>Architecture:</strong> Clean Architecture + DDD</p>
               </div>
             </div>
           </div>
-          
           <div class="accordion-item" [class.open]="openAccordion === 'frontend'">
             <button class="accordion-trigger" (click)="toggleAccordion('frontend')">
               <span>Frontend (Angular + React)</span>
@@ -502,7 +517,7 @@ import { CommonModule } from '@angular/common';
             </svg>
             Ver en GitHub
           </a>
-          <p class="version">v0.5.7 | Development Preview</p>
+          <p class="version">v0.6.0-alpha | Python Analytics Integration</p>
           <p class="portfolio">Parhelion Logistics — MetaCodeX Portfolio 2025</p>
           <p class="credits">UI: <a href="https://github.com/ekmas/neobrutalism-components" target="_blank">neobrutalism-components</a></p>
         </div>
@@ -827,36 +842,14 @@ import { CommonModule } from '@angular/common';
   `]
 })
 export class AppComponent implements AfterViewInit {
-  @ViewChild('gridBg') gridBg!: ElementRef<HTMLDivElement>;
-  
   activeTab = 'core';
   currentSlide = 0;
   openAccordion = 'backend';
 
   ngAfterViewInit() {
-    // Random grid animation direction
-    const directions = [
-      { x: 150, y: 0 },
-      { x: -150, y: 0 },
-      { x: 0, y: 150 },
-      { x: 0, y: -150 },
-      { x: 120, y: 120 },
-      { x: -120, y: 120 },
-      { x: 120, y: -120 },
-      { x: -120, y: -120 }
-    ];
-    
-    const randomDir = directions[Math.floor(Math.random() * directions.length)];
-    const randomDuration = 30 + Math.random() * 30;
-    
-    const el = this.gridBg.nativeElement;
-    el.style.setProperty('--grid-x', `${randomDir.x}px`);
-    el.style.setProperty('--grid-y', `${randomDir.y}px`);
-    el.style.setProperty('--grid-duration', `${randomDuration}s`);
-
-    // Auto-rotate carousel
+    // Auto-rotate carousel every 6 seconds
     setInterval(() => {
-      this.currentSlide = (this.currentSlide + 1) % 8;
+      this.currentSlide = (this.currentSlide + 1) % 9;
     }, 6000);
   }
 
