@@ -13,25 +13,25 @@ import { CommonModule } from '@angular/common';
       <!-- MARQUEE - Announcement Banner -->
       <div class="marquee-container">
         <div class="marquee">
-          <span>★ PARHELION v0.6.0-alpha RELEASED</span>
+          <span>★ PARHELION v0.6.0-beta RELEASED</span>
           <span>•</span>
-          <span>Python Analytics Service</span>
+          <span>10 Python ML Modules</span>
           <span>•</span>
-          <span>FastAPI + SQLAlchemy</span>
+          <span>Route Optimizer • ETA Predictor • 3D Loading</span>
           <span>•</span>
-          <span>Clean Architecture</span>
+          <span>5 Stress Tests Validated</span>
           <span>•</span>
-          <span>Multi-Service Docker</span>
+          <span>Multi-Tenant Authorization</span>
           <span>•</span>
-          <span>★ PARHELION v0.6.0-alpha RELEASED</span>
+          <span>★ PARHELION v0.6.0-beta RELEASED</span>
           <span>•</span>
-          <span>Python Analytics Service</span>
+          <span>10 Python ML Modules</span>
           <span>•</span>
-          <span>FastAPI + SQLAlchemy</span>
+          <span>Route Optimizer • ETA Predictor • 3D Loading</span>
           <span>•</span>
-          <span>Clean Architecture</span>
+          <span>5 Stress Tests Validated</span>
           <span>•</span>
-          <span>Multi-Service Docker</span>
+          <span>Multi-Tenant Authorization</span>
           <span>•</span>
         </div>
       </div>
@@ -45,9 +45,9 @@ import { CommonModule } from '@angular/common';
           </div>
           
           <div class="badges">
-            <span class="badge badge-new">NEW v0.6.0</span>
-            <span class="badge badge-oxide">Python + .NET</span>
-            <span class="badge">Multi-tenant</span>
+            <span class="badge badge-new">v0.6.0-beta</span>
+            <span class="badge badge-oxide">10 ML Modules</span>
+            <span class="badge">Stress Tested</span>
           </div>
 
           <p class="tagline">Plataforma Unificada de Logística B2B</p>
@@ -352,6 +352,250 @@ import { CommonModule } from '@angular/common';
         </div>
       </section>
 
+      <!-- PYTHON ANALYTICS SECTION - ENHANCED -->
+      <section class="python-section content-layer">
+        <h2 class="section-title">Python <span>Analytics</span> Service</h2>
+        <p class="section-subtitle">10 modulos de Machine Learning integrados para optimizacion logistica avanzada</p>
+        
+        <!-- STATS ANIMATED BARS -->
+        <div class="stats-container">
+          <div class="stat-card">
+            <div class="stat-number">10</div>
+            <div class="stat-label">ML Modules</div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" style="width: 100%"></div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">500</div>
+            <div class="stat-label">Shipments Tested</div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" style="width: 85%"></div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">50</div>
+            <div class="stat-label">Concurrent Requests</div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" style="width: 100%"></div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">3.2s</div>
+            <div class="stat-label">Avg Response</div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" style="width: 70%"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- PIE CHART VISUAL -->
+        <div class="charts-row">
+          <div class="chart-container">
+            <h4>Distribucion de Modulos</h4>
+            <svg class="pie-chart" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" class="pie-bg"></circle>
+              <circle cx="50" cy="50" r="40" class="pie-segment pie-1" stroke-dasharray="75 251"></circle>
+              <circle cx="50" cy="50" r="40" class="pie-segment pie-2" stroke-dasharray="50 251" stroke-dashoffset="-75"></circle>
+              <circle cx="50" cy="50" r="40" class="pie-segment pie-3" stroke-dasharray="63 251" stroke-dashoffset="-125"></circle>
+              <circle cx="50" cy="50" r="40" class="pie-segment pie-4" stroke-dasharray="63 251" stroke-dashoffset="-188"></circle>
+            </svg>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="dot dot-1"></span>Optimization (3)</span>
+              <span class="legend-item"><span class="dot dot-2"></span>Prediction (2)</span>
+              <span class="legend-item"><span class="dot dot-3"></span>Analysis (3)</span>
+              <span class="legend-item"><span class="dot dot-4"></span>Performance (2)</span>
+            </div>
+          </div>
+          
+          <div class="chart-container">
+            <h4>Rendimiento por Modulo</h4>
+            <div class="bar-chart">
+              <div class="bar-item">
+                <span class="bar-label">Route</span>
+                <div class="bar-track"><div class="bar-value" style="width: 95%"></div></div>
+                <span class="bar-percent">95%</span>
+              </div>
+              <div class="bar-item">
+                <span class="bar-label">ETA</span>
+                <div class="bar-track"><div class="bar-value" style="width: 88%"></div></div>
+                <span class="bar-percent">88%</span>
+              </div>
+              <div class="bar-item">
+                <span class="bar-label">Load 3D</span>
+                <div class="bar-track"><div class="bar-value" style="width: 75%"></div></div>
+                <span class="bar-percent">75%</span>
+              </div>
+              <div class="bar-item">
+                <span class="bar-label">Anomaly</span>
+                <div class="bar-track"><div class="bar-value" style="width: 92%"></div></div>
+                <span class="bar-percent">92%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- MODULES GRID -->
+        <div class="python-grid">
+          <div class="card card-highlight">
+            <div class="card-header">
+              <h3>Route Optimizer</h3>
+              <span class="badge badge-oxide">NetworkX</span>
+            </div>
+            <div class="card-content">
+              Dijkstra para rutas optimas entre hubs. Minimiza tiempo y combustible.
+            </div>
+          </div>
+          
+          <div class="card card-highlight">
+            <div class="card-header">
+              <h3>Truck Recommender</h3>
+              <span class="badge badge-new">ML</span>
+            </div>
+            <div class="card-content">
+              Asignacion inteligente basada en carga, distancia y disponibilidad.
+            </div>
+          </div>
+          
+          <div class="card card-highlight">
+            <div class="card-header">
+              <h3>Demand Forecaster</h3>
+              <span class="badge badge-oxide">Prophet</span>
+            </div>
+            <div class="card-content">
+              Prediccion de demanda con Prophet. Detecta estacionalidad.
+            </div>
+          </div>
+          
+          <div class="card card-highlight">
+            <div class="card-header">
+              <h3>Anomaly Detector</h3>
+              <span class="badge badge-new">Isolation</span>
+            </div>
+            <div class="card-content">
+              Deteccion de envios anomalos con Isolation Forest.
+            </div>
+          </div>
+          
+          <div class="card card-highlight">
+            <div class="card-header">
+              <h3>3D Loading</h3>
+              <span class="badge badge-oxide">Bin Packing</span>
+            </div>
+            <div class="card-content">
+              Optimizacion de carga 3D por peso, volumen y apilamiento.
+            </div>
+          </div>
+          
+          <div class="card card-highlight">
+            <div class="card-header">
+              <h3>ETA Predictor</h3>
+              <span class="badge badge-new">GBoost</span>
+            </div>
+            <div class="card-content">
+              Gradient Boosting para tiempos de entrega con confianza.
+            </div>
+          </div>
+        </div>
+        
+        <div class="more-modules">
+          <span class="badge">Network Analyzer</span>
+          <span class="badge">Shipment Clusterer</span>
+          <span class="badge">Driver Performance</span>
+          <span class="badge">Dashboard Engine</span>
+        </div>
+      </section>
+
+      <!-- ROADMAP TIMELINE SECTION -->
+      <section class="roadmap-section content-layer">
+        <h2 class="section-title">Roadmap <span>Timeline</span></h2>
+        
+        <!-- HIATUS ALERT -->
+        <div class="alert alert-warning hiatus-alert">
+          <span class="alert-icon">||</span>
+          <div>
+            <strong>HIATUS INDEFINIDO</strong> - Proyecto en pausa. Codigo disponible como portafolio tecnico.
+          </div>
+        </div>
+        
+        <!-- TIMELINE -->
+        <div class="timeline">
+          <div class="timeline-item done">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <span class="timeline-date">Dic 2025</span>
+              <h4>v0.1.0 - v0.3.0</h4>
+              <p>Estructura inicial, Domain Layer (25 entidades), Infrastructure Layer (EF Core + PostgreSQL)</p>
+            </div>
+          </div>
+          
+          <div class="timeline-item done">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <span class="timeline-date">Dic 2025</span>
+              <h4>v0.4.0 - v0.4.3</h4>
+              <p>API Layer, JWT Authentication, Employee Layer, 24 tablas PostgreSQL</p>
+            </div>
+          </div>
+          
+          <div class="timeline-item done">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <span class="timeline-date">Dic 22-23</span>
+              <h4>v0.5.0 - v0.5.7</h4>
+              <p>Services Layer, 122 xUnit Tests, n8n Webhooks, PDF Generation, FleetLog</p>
+            </div>
+          </div>
+          
+          <div class="timeline-item done current">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <span class="timeline-date">Dic 28-29</span>
+              <h4>v0.6.0-beta</h4>
+              <p>Python Analytics (10 ML Modules), Multi-tenant Authorization, Stress Tests</p>
+            </div>
+          </div>
+          
+          <div class="timeline-item pending">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <span class="timeline-date">TBD</span>
+              <h4>v0.7.0 - v0.8.0</h4>
+              <p>QR Handshake, Route Assignment, Admin Panel (Angular)</p>
+            </div>
+          </div>
+          
+          <div class="timeline-item pending">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <span class="timeline-date">TBD</span>
+              <h4>v0.9.0 - v1.0.0</h4>
+              <p>PWA Operaciones, PWA Driver, Dashboard KPIs, Sistema de Cortes, Modo Demo</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- METRICS SUMMARY -->
+        <div class="metrics-summary">
+          <div class="metric">
+            <div class="metric-value">27</div>
+            <div class="metric-label">Tablas DB</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value">122</div>
+            <div class="metric-label">Unit Tests</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value">22</div>
+            <div class="metric-label">API Endpoints</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value">10</div>
+            <div class="metric-label">ML Modules</div>
+          </div>
+        </div>
+      </section>
+
       <!-- CAROUSEL - Complete Changelog -->
       <section class="changelog-section content-layer">
         <h2 class="section-title">Changelog <span>Completo</span></h2>
@@ -362,7 +606,23 @@ import { CommonModule } from '@angular/common';
             <div class="carousel-slide">
               <div class="changelog-item">
                 <div class="changelog-header">
-                  <span class="badge badge-new">NEW</span>
+                  <span class="badge badge-new">LATEST</span>
+                  <h3>v0.6.0-beta</h3>
+                </div>
+                <p class="changelog-date">2025-12-29</p>
+                <ul>
+                  <li>10 Python ML Modules (Route, ETA, Anomaly, 3D Loading)</li>
+                  <li>Multi-Tenant Authorization Refactor</li>
+                  <li>5 Stress Tests: 500 shipments, 50 concurrent requests</li>
+                  <li>Polly Resilience for inter-service communication</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="carousel-slide">
+              <div class="changelog-item">
+                <div class="changelog-header">
+                  <span class="badge badge-oxide">PYTHON</span>
                   <h3>v0.6.0-alpha</h3>
                 </div>
                 <p class="changelog-date">2025-12-28</p>
@@ -581,7 +841,7 @@ import { CommonModule } from '@angular/common';
             </svg>
             Ver en GitHub
           </a>
-          <p class="version">v0.6.0-alpha | Python Analytics Integration</p>
+          <p class="version">v0.6.0-beta | Python Analytics + Multi-tenant Authorization</p>
           <p class="portfolio">Parhelion Logistics — MetaCodeX Portfolio 2025</p>
           <p class="credits">UI: <a href="https://github.com/ekmas/neobrutalism-components" target="_blank">neobrutalism-components</a></p>
         </div>
@@ -825,6 +1085,462 @@ import { CommonModule } from '@angular/common';
     }
 
     .credits a {
+      color: var(--parhelion-oxide);
+    }
+
+    /* PYTHON ANALYTICS SECTION */
+    .python-section {
+      background: linear-gradient(135deg, #2D1B69 0%, #1a0f3d 100%);
+      border-top: 4px solid var(--parhelion-oxide);
+      border-bottom: 4px solid var(--parhelion-oxide);
+      color: white;
+    }
+
+    .python-section .section-title {
+      color: white;
+    }
+
+    .python-section .section-title span {
+      color: #FFD43B;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+
+    /* STATS CONTAINER */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 212, 59, 0.3);
+      padding: 1.25rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      background: rgba(255, 212, 59, 0.15);
+      border-color: #FFD43B;
+      transform: translateY(-4px);
+      box-shadow: 4px 4px 0 #FFD43B;
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #FFD43B;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      opacity: 0.8;
+      margin-top: 0.5rem;
+    }
+
+    .stat-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      margin-top: 0.75rem;
+      overflow: hidden;
+    }
+
+    .stat-bar-fill {
+      height: 100%;
+      background: #FFD43B;
+      animation: fillBar 1.5s ease-out forwards;
+      transform-origin: left;
+    }
+
+    @keyframes fillBar {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
+    /* CHARTS ROW */
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-container {
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      padding: 1.5rem;
+    }
+
+    .chart-container h4 {
+      margin: 0 0 1rem 0;
+      font-size: 1rem;
+      color: #FFD43B;
+    }
+
+    /* PIE CHART */
+    .pie-chart {
+      width: 150px;
+      height: 150px;
+      margin: 0 auto;
+      display: block;
+      transform: rotate(-90deg);
+    }
+
+    .pie-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.1);
+      stroke-width: 20;
+    }
+
+    .pie-segment {
+      fill: none;
+      stroke-width: 20;
+      stroke-linecap: butt;
+      animation: pieGrow 1s ease-out forwards;
+    }
+
+    .pie-1 { stroke: #FFD43B; }
+    .pie-2 { stroke: #3498DB; }
+    .pie-3 { stroke: #E74C3C; }
+    .pie-4 { stroke: #2ECC71; }
+
+    @keyframes pieGrow {
+      from { stroke-dasharray: 0 251; }
+    }
+
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+
+    .dot-1 { background: #FFD43B; }
+    .dot-2 { background: #3498DB; }
+    .dot-3 { background: #E74C3C; }
+    .dot-4 { background: #2ECC71; }
+
+    /* BAR CHART */
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .bar-item {
+      display: grid;
+      grid-template-columns: 60px 1fr 40px;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .bar-label {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .bar-track {
+      height: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+    }
+
+    .bar-value {
+      height: 100%;
+      background: linear-gradient(90deg, #FFD43B 0%, #FFA500 100%);
+      animation: barGrow 1.2s ease-out forwards;
+      transform-origin: left;
+    }
+
+    @keyframes barGrow {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
+    .bar-percent {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #FFD43B;
+    }
+
+    /* TIMELINE */
+    .timeline {
+      position: relative;
+      max-width: 700px;
+      margin: 0 auto 2rem auto;
+      padding-left: 30px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(to bottom, #22c55e 0%, #22c55e 66%, #ddd 66%, #ddd 100%);
+    }
+
+    .timeline-item {
+      position: relative;
+      padding: 0.5rem 0 1.5rem 1.5rem;
+      animation: fadeSlideIn 0.5s ease forwards;
+      opacity: 0;
+    }
+
+    .timeline-item:nth-child(1) { animation-delay: 0.1s; }
+    .timeline-item:nth-child(2) { animation-delay: 0.2s; }
+    .timeline-item:nth-child(3) { animation-delay: 0.3s; }
+    .timeline-item:nth-child(4) { animation-delay: 0.4s; }
+    .timeline-item:nth-child(5) { animation-delay: 0.5s; }
+    .timeline-item:nth-child(6) { animation-delay: 0.6s; }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .timeline-marker {
+      position: absolute;
+      left: -24px;
+      top: 0.75rem;
+      width: 16px;
+      height: 16px;
+      background: white;
+      border: 3px solid #22c55e;
+      border-radius: 50%;
+    }
+
+    .timeline-item.pending .timeline-marker {
+      border-color: #ddd;
+      background: #f5f5f5;
+    }
+
+    .timeline-item.current .timeline-marker {
+      background: #FFD43B;
+      border-color: var(--parhelion-oxide);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 212, 59, 0.4); }
+      50% { box-shadow: 0 0 0 10px rgba(255, 212, 59, 0); }
+    }
+
+    .timeline-content {
+      background: white;
+      border: 2px solid var(--parhelion-black);
+      padding: 1rem;
+      box-shadow: 4px 4px 0 var(--parhelion-black);
+    }
+
+    .timeline-item.pending .timeline-content {
+      background: #f9f9f9;
+      border-color: #ddd;
+      box-shadow: 4px 4px 0 #ccc;
+    }
+
+    .timeline-date {
+      font-size: 0.75rem;
+      color: var(--parhelion-oxide);
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .timeline-content h4 {
+      margin: 0.25rem 0;
+      font-size: 1.1rem;
+    }
+
+    .timeline-content p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    /* METRICS SUMMARY */
+    .metrics-summary {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .metric {
+      background: white;
+      border: 2px solid var(--parhelion-black);
+      padding: 1.25rem 2rem;
+      text-align: center;
+      box-shadow: 4px 4px 0 var(--parhelion-black);
+      min-width: 100px;
+      animation: bounceIn 0.5s ease;
+    }
+
+    .metric:nth-child(1) { animation-delay: 0.1s; }
+    .metric:nth-child(2) { animation-delay: 0.2s; }
+    .metric:nth-child(3) { animation-delay: 0.3s; }
+    .metric:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes bounceIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      60% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--parhelion-oxide);
+      line-height: 1;
+    }
+
+    .metric-label {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
+    .python-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .python-section .card-highlight {
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 212, 59, 0.3);
+      backdrop-filter: blur(10px);
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .python-section .card-highlight:hover {
+      background: rgba(255, 212, 59, 0.1);
+      border-color: #FFD43B;
+      transform: translateY(-4px);
+      box-shadow: 4px 4px 0 #FFD43B;
+    }
+
+    .python-section .card-header h3 {
+      color: white;
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    .python-section .card-content {
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.95rem;
+    }
+
+    .more-modules {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .more-modules .badge {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* ROADMAP SECTION */
+    .roadmap-section {
+      background-color: var(--parhelion-sand);
+      border-top: 2px solid var(--parhelion-black);
+    }
+
+    .hiatus-alert {
+      max-width: 700px;
+      margin: 0 auto 2rem auto;
+      background: #FEF3CD;
+      border: 2px solid var(--parhelion-oxide);
+      box-shadow: 4px 4px 0 var(--parhelion-black);
+    }
+
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .roadmap-column {
+      background: white;
+      border: 2px solid var(--parhelion-black);
+      box-shadow: 4px 4px 0 var(--parhelion-black);
+      padding: 1.5rem;
+    }
+
+    .roadmap-column h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1.2rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--parhelion-black);
+    }
+
+    .roadmap-column.done h3 {
+      color: #22c55e;
+    }
+
+    .roadmap-column.pending h3 {
+      color: var(--parhelion-oxide);
+    }
+
+    .roadmap-column ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .roadmap-column li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #eee;
+      font-size: 0.95rem;
+    }
+
+    .roadmap-column li:last-child {
+      border-bottom: none;
+    }
+
+    .roadmap-column.done li::before {
+      content: "✓ ";
+      color: #22c55e;
+      font-weight: bold;
+    }
+
+    .roadmap-column.pending li::before {
+      content: "○ ";
       color: var(--parhelion-oxide);
     }
 
