@@ -100,6 +100,11 @@ import { CommonModule } from '@angular/common';
           >Core</button>
           <button 
             class="tab-trigger" 
+            [class.active]="activeTab === 'analytics'"
+            (click)="activeTab = 'analytics'"
+          >Analytics</button>
+          <button 
+            class="tab-trigger" 
             [class.active]="activeTab === 'fleet'"
             (click)="activeTab = 'fleet'"
           >Flotilla</button>
@@ -142,6 +147,65 @@ import { CommonModule } from '@angular/common';
               </div>
               <div class="card-content">
                 Domain-Driven Design. 25 entidades, 17 enums, Repository Pattern.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" [class.active]="activeTab === 'analytics'">
+          <div class="features-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3>Python 3.12 + FastAPI</h3>
+                <span class="badge badge-oxide">NEW</span>
+              </div>
+              <div class="card-content">
+                Microservicio dedicado con SQLAlchemy 2.0 + asyncpg. Clean Architecture.
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>10 Módulos de Análisis</h3>
+                <span class="badge badge-new">ML</span>
+              </div>
+              <div class="card-content">
+                Route Optimizer, Truck Recommender, Demand Forecaster, Anomaly Detector, Loading 3D
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>Predicción ETA</h3>
+                <span class="badge badge-oxide">AI</span>
+              </div>
+              <div class="card-content">
+                Gradient Boosting para estimar tiempos de entrega con nivel de confianza
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>Network Analyzer</h3>
+                <span class="badge badge-new">Graph</span>
+              </div>
+              <div class="card-content">
+                NetworkX para identificar hubs críticos, cuellos de botella y rutas óptimas
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>Loading Optimizer</h3>
+                <span class="badge badge-oxide">3D</span>
+              </div>
+              <div class="card-content">
+                Algoritmo 3D Bin Packing para optimizar carga de camiones por peso y volumen
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>Stress Tests Validados</h3>
+                <span class="badge badge-new">5 tests</span>
+              </div>
+              <div class="card-content">
+                500 shipments, concurrencia 50 req, fragmentación de red, chaos simulation
               </div>
             </div>
           </div>

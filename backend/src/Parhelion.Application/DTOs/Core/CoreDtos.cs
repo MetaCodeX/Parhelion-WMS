@@ -39,7 +39,12 @@ public record CreateUserRequest(
     string Password,
     string FullName,
     Guid RoleId,
-    bool IsDemoUser = false
+    bool IsDemoUser = false,
+    /// <summary>
+    /// Optional: Only SuperAdmin can specify a different TenantId.
+    /// For regular admins, this is ignored and the user inherits the admin's TenantId.
+    /// </summary>
+    Guid? TargetTenantId = null
 );
 
 public record UpdateUserRequest(

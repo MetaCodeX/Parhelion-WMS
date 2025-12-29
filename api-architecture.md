@@ -128,7 +128,9 @@ Infraestructura base para operaciones CRUD y transacciones.
 
 ---
 
-## Autenticacion
+## Autenticación y Autorización
+
+### Autenticación JWT
 
 Todos los endpoints protegidos requieren JWT Bearer token:
 
@@ -136,7 +138,152 @@ Todos los endpoints protegidos requieren JWT Bearer token:
 Authorization: Bearer <access_token>
 ```
 
-El token se obtiene via `/api/auth/login` con credenciales validas.
+El token se obtiene via `/api/auth/login` con credenciales válidas.
+
+### Flujo de Autorización Multi-Tenant
+
+El sistema implementa un modelo de autorización jerárquico basado en roles:
+
+```mermaid
+graph TD
+    SA[SuperAdmin] -->|Crea| T[Tenants]
+    SA -->|Crea Admin de| TA[Tenant Admin]
+    TA -->|Crea usuarios de| D[Drivers]
+    TA -->|Crea usuarios de| W[Warehouse]
+    TA -->|Gestiona| S[Shipments]
+    TA -->|Gestiona| TR[Trucks]
+```
+
+| Rol              | Permisos                                                        | Restricciones                                               |
+| ---------------- | --------------------------------------------------------------- | ----------------------------------------------------------- |
+| **SuperAdmin**   | Crear Tenants, crear Admin users para cualquier Tenant          | No puede operar dentro de un Tenant (crear shipments, etc.) |
+| **Tenant Admin** | CRUD completo de Users, Drivers, Trucks, Shipments de su Tenant | Solo acceso a datos de su propio Tenant                     |
+| **Driver**       | Ver shipments asignados, actualizar estado, crear checkpoints   | Solo sus propios shipments                                  |
+| **Warehouse**    | Cargar/descargar items, crear checkpoints de carga              | Solo en su ubicación asignada                               |
+
+### Herencia de TenantId
+
+Cuando un usuario crea entidades, el `TenantId` se asigna automáticamente:
+
+- **SuperAdmin + `targetTenantId`**: Puede especificar el Tenant destino (solo para crear Admins)
+- **Tenant Admin**: Todas las entidades heredan su `TenantId` automáticamente
+- **Otros roles**: Heredan `TenantId` del contexto de la sesión
+
+### ServiceApiKey (Agentes IA)
+
+Para integraciones con n8n y agentes IA, cada Tenant tiene un `ServiceApiKey` generado automáticamente:
+
+```http
+X-Service-Api-Key: <api_key>
+```
+
+---
+
+## Guía de Uso de la API
+
+> **Nota:** En los ejemplos, `$API_BASE` representa la URL base de la API (ej. `https://api.example.com` o la URL de desarrollo).
+
+### 1. Login y Obtención de Token
+
+```bash
+curl -X POST $API_BASE/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"Password123!"}'
+```
+
+**Response:** `{ "accessToken": "eyJ...", "refreshToken": "..." }`
+
+### 2. Crear Tenant (Solo SuperAdmin)
+
+```bash
+curl -X POST $API_BASE/api/tenants \
+  -H "Authorization: Bearer <superadmin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "TransporteMX",
+    "legalName": "Transportes MX SA de CV",
+    "rfc": "TMX010101ABC",
+    "fleetSize": 10,
+    "driverCount": 5
+  }'
+```
+
+### 3. Crear Admin de Otro Tenant (Solo SuperAdmin)
+
+```bash
+curl -X POST $API_BASE/api/users \
+  -H "Authorization: Bearer <superadmin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@newtenant.com",
+    "password": "SecurePass123!",
+    "fullName": "Admin Nuevo",
+    "roleId": "11111111-1111-1111-1111-111111111111",
+    "targetTenantId": "<tenant_id_destino>"
+  }'
+```
+
+> **Importante:** Solo SuperAdmin puede usar `targetTenantId`. Tenant Admins crean usuarios que heredan su propio TenantId.
+
+### 4. Crear Usuario en Mi Tenant (Como Tenant Admin)
+
+```bash
+curl -X POST $API_BASE/api/users \
+  -H "Authorization: Bearer <tenant_admin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "driver@mytenant.com",
+    "password": "DriverPass123!",
+    "fullName": "Chofer Nuevo",
+    "roleId": "22222222-2222-2222-2222-222222222222"
+  }'
+```
+
+### 5. Crear Location
+
+```bash
+curl -X POST $API_BASE/api/locations \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "MTY",
+    "name": "Hub Monterrey",
+    "fullAddress": "Av Industrial 500, Monterrey NL",
+    "type": "RegionalHub",
+    "latitude": 25.6866,
+    "longitude": -100.3161,
+    "isInternal": true,
+    "canReceive": true,
+    "canDispatch": true
+  }'
+```
+
+### 6. Crear Shipment
+
+```bash
+curl -X POST $API_BASE/api/shipments \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "originLocationId": "<origin_uuid>",
+    "destinationLocationId": "<dest_uuid>",
+    "recipientName": "Cliente Final",
+    "recipientPhone": "5512345678",
+    "totalWeightKg": 100.5,
+    "totalVolumeM3": 0.5,
+    "priority": "Standard"
+  }'
+```
+
+### Role IDs de Referencia
+
+| Rol        | ID                                     |
+| ---------- | -------------------------------------- |
+| SuperAdmin | `00000000-0000-0000-0000-000000000001` |
+| Admin      | `11111111-1111-1111-1111-111111111111` |
+| Driver     | `22222222-2222-2222-2222-222222222222` |
+| DemoUser   | `33333333-3333-3333-3333-333333333333` |
+| Warehouse  | `44444444-4444-4444-4444-444444444444` |
 
 ---
 
@@ -236,4 +383,4 @@ La gestion de endpoints durante desarrollo utiliza herramientas privadas que no 
 
 ---
 
-**Ultima actualizacion:** 2025-12-28
+**Ultima actualizacion:** 2025-12-29

@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Http;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Parhelion.Application.Auth;
@@ -11,6 +12,7 @@ using Parhelion.Infrastructure.Data;
 using Parhelion.Infrastructure.Data.Interceptors;
 using Parhelion.Infrastructure.Services;
 using Parhelion.Infrastructure.External.Webhooks;
+using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -205,6 +207,22 @@ else
     builder.Services.AddSingleton<Parhelion.Application.Interfaces.IWebhookPublisher, 
         Parhelion.Application.Interfaces.NullWebhookPublisher>();
 }
+
+// ========== PYTHON ANALYTICS CLIENT (with Polly resilience) ==========
+var pythonAnalyticsUrl = Environment.GetEnvironmentVariable("PYTHON_ANALYTICS_URL") 
+    ?? "http://parhelion-python:8000";
+
+builder.Services.AddHttpClient<Parhelion.Application.Interfaces.IPythonAnalyticsClient, 
+    Parhelion.Infrastructure.External.PythonAnalyticsClient>(client =>
+{
+    client.BaseAddress = new Uri(pythonAnalyticsUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("X-Internal-Call", "true");
+})
+.AddTransientHttpErrorPolicy(policy => 
+    policy.WaitAndRetryAsync(3, retryAttempt => 
+        TimeSpan.FromMilliseconds(500 * Math.Pow(2, retryAttempt))));
+
 
 // ========== JWT AUTHENTICATION ==========
 // JWT Secret desde variable de entorno

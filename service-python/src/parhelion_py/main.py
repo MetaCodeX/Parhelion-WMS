@@ -2,7 +2,11 @@
 Parhelion Python Analytics Service - Main Application
 ======================================================
 
-FastAPI application entry point with Clean Architecture.
+INTERNAL microservice for ML analytics.
+Called only by the .NET API within Docker network.
+
+This service does NOT handle authentication - it trusts
+calls from the .NET API which validates JWT tokens.
 """
 
 import logging
@@ -13,7 +17,8 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from parhelion_py.api.routers import health, analytics
+from parhelion_py.api.routers import health
+from parhelion_py.api.routers.internal import router as internal_router
 from parhelion_py.infrastructure.config.settings import get_settings
 
 settings = get_settings()
@@ -53,8 +58,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     
     # Startup
     logger.info(f"Starting Parhelion Python Analytics v{settings.version}")
+    logger.info(f"Mode: INTERNAL SERVICE (no external auth)")
     logger.info(f"Environment: {settings.environment}")
-    logger.info(f"API URL: {settings.parhelion_api_url}")
     
     yield
     
@@ -66,26 +71,28 @@ def create_app() -> FastAPI:
     """Factory function to create FastAPI application."""
     
     app = FastAPI(
-        title="Parhelion Python Analytics",
-        description="Microservicio de análisis y predicciones para Parhelion Logistics",
+        title="Parhelion Python Analytics (Internal)",
+        description="Internal ML analytics service - called by .NET API only",
         version=settings.version,
         docs_url="/docs" if settings.environment != "production" else None,
         redoc_url="/redoc" if settings.environment != "production" else None,
         lifespan=lifespan,
     )
     
-    # CORS Middleware
+    # CORS - allow internal Docker network
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins,
+        allow_origins=["*"],  # Internal service - trust Docker network
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
     
-    # Include routers
+    # Health endpoints (public for Docker health checks)
     app.include_router(health.router, tags=["Health"])
-    app.include_router(analytics.router)
+    
+    # Internal ML endpoints (no auth required)
+    app.include_router(internal_router)
     
     return app
 

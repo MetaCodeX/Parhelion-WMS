@@ -357,7 +357,7 @@ public class ShipmentService : IShipmentService
         return (true, null);
     }
 
-    private static string GenerateTrackingNumber() => $"PAR-{DateTime.UtcNow:yyyyMMddHHmmss}-{new Random().Next(1000, 9999)}";
+    private static string GenerateTrackingNumber() => $"P{DateTime.UtcNow:yyMMddHHmmss}{new Random().Next(1000, 9999):D4}";
 
     private async Task<ShipmentResponse> MapToResponseAsync(Domain.Entities.Shipment e, CancellationToken ct)
     {

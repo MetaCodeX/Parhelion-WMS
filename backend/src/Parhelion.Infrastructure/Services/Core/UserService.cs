@@ -4,6 +4,7 @@ using Parhelion.Application.DTOs.Common;
 using Parhelion.Application.DTOs.Core;
 using Parhelion.Application.Interfaces;
 using Parhelion.Application.Interfaces.Services;
+using Parhelion.Application.Services;
 using Parhelion.Domain.Entities;
 
 namespace Parhelion.Infrastructure.Services.Core;
@@ -16,16 +17,19 @@ public class UserService : IUserService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
     /// Inicializa una nueva instancia del servicio de Users.
     /// </summary>
-    /// <param name="unitOfWork">Unit of Work para coordinación de repositorios.</param>
-    /// <param name="passwordHasher">Servicio de hashing de passwords.</param>
-    public UserService(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher)
+    public UserService(
+        IUnitOfWork unitOfWork, 
+        IPasswordHasher passwordHasher,
+        ICurrentUserService currentUserService)
     {
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
+        _currentUserService = currentUserService;
     }
 
     /// <inheritdoc />
@@ -83,6 +87,41 @@ public class UserService : IUserService
             return OperationResult<UserResponse>.Fail("Rol no encontrado");
         }
 
+        // Determinar TenantId del nuevo usuario
+        Guid targetTenantId;
+        var creatorUser = _currentUserService.UserId.HasValue 
+            ? await _unitOfWork.Users.GetByIdAsync(_currentUserService.UserId.Value, cancellationToken)
+            : null;
+        var creatorIsSuperAdmin = creatorUser?.IsSuperAdmin ?? false;
+        
+        if (request.TargetTenantId.HasValue)
+        {
+            // Solo SuperAdmin puede especificar un TenantId diferente
+            if (!creatorIsSuperAdmin)
+            {
+                return OperationResult<UserResponse>.Fail(
+                    "Solo SuperAdmin puede crear usuarios en otros tenants");
+            }
+            
+            // Validar que el tenant destino exista
+            var targetTenant = await _unitOfWork.Tenants.GetByIdAsync(request.TargetTenantId.Value, cancellationToken);
+            if (targetTenant == null)
+            {
+                return OperationResult<UserResponse>.Fail("Tenant destino no encontrado");
+            }
+            
+            targetTenantId = request.TargetTenantId.Value;
+        }
+        else
+        {
+            // Heredar TenantId del creador
+            if (!_currentUserService.TenantId.HasValue)
+            {
+                return OperationResult<UserResponse>.Fail("No se pudo determinar el tenant del creador");
+            }
+            targetTenantId = _currentUserService.TenantId.Value;
+        }
+
         // Hash del password (Argon2id para SuperAdmins, BCrypt para resto)
         var isSuperAdmin = request.Email.EndsWith("@parhelion.com");
         var passwordHash = _passwordHasher.HashPassword(request.Password, isSuperAdmin);
@@ -94,6 +133,7 @@ public class UserService : IUserService
             PasswordHash = passwordHash,
             FullName = request.FullName,
             RoleId = request.RoleId,
+            TenantId = targetTenantId,
             IsDemoUser = request.IsDemoUser,
             IsSuperAdmin = isSuperAdmin,
             IsActive = true,

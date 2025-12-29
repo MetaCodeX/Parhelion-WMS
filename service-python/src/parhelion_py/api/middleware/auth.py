@@ -27,7 +27,7 @@ async def verify_internal_service_key(
     if not x_internal_service_key:
         return False
     
-    return x_internal_service_key == settings.internal_service_key
+    return x_internal_service_key == settings.parhelion_api_internal_key
 
 
 async def verify_jwt_token(

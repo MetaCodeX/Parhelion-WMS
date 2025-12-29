@@ -68,6 +68,62 @@ Ejemplo: 0.6.0-alpha.1+build.2025.12.28
 
 ---
 
+## [0.6.0-beta] - 2025-12-29
+
+### Refactorización de Autorización Multi-Tenant
+
+- **UserService.CreateAsync refactorizado:**
+
+  - SuperAdmin puede especificar `targetTenantId` para crear Admin de otro Tenant
+  - Tenant Admin crea usuarios que heredan `TenantId` automáticamente
+  - Validación: Non-SuperAdmin no puede usar `targetTenantId`
+
+- **AuditSaveChangesInterceptor mejorado:**
+
+  - Asignación automática de `TenantId` para todas las `TenantEntity`
+  - TenantId extraído del contexto del usuario creador
+
+- **CreateUserRequest DTO actualizado:**
+  - Nuevo campo opcional: `TargetTenantId` (solo para SuperAdmin)
+
+### Base de Datos
+
+- **Reset completo de datos de prueba:**
+
+  - Sistema limpio con flujo multi-tenant correcto
+  - 1 SuperAdmin (MetaCodeX CEO)
+  - 1 Tenant ejemplo (TransporteMX) con recursos completos
+
+- **Script de reset:** `scripts/reset_database.sql`
+
+### Nuevo Tenant de Prueba: TransporteMX
+
+| Entidad   | Cantidad | Detalles                          |
+| --------- | -------- | --------------------------------- |
+| Users     | 6        | 1 Admin + 3 Drivers + 2 Warehouse |
+| Employees | 5        | Vinculados a Users                |
+| Drivers   | 3        | Con Trucks asignados              |
+| Trucks    | 3        | DryBox, Refrigerated, Flatbed     |
+| Locations | 4        | 3 Hubs + 1 Store                  |
+
+### Documentación
+
+- `api-architecture.md` - Nueva sección "Autenticación y Autorización" con diagrama Mermaid
+- `README.md` - Actualizado con Multi-tenancy Automático
+- `credentials.dev.txt` - Archivo de credenciales de desarrollo con todos los IDs
+
+### Preparación para Stress Tests
+
+- `scripts/stress_tests.py` - Actualizado con credenciales y IDs correctos
+- 5 tests de estrés listos para ejecución:
+  1. Generación masiva (500 shipments)
+  2. Fragmentación de red
+  3. Simulación de caos operativo
+  4. Concurrencia Polly
+  5. Optimización de carga 3D
+
+---
+
 ## [0.5.7] - 2025-12-23
 
 ### Agregado

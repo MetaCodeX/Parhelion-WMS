@@ -43,6 +43,7 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
         
         var now = DateTime.UtcNow;
         var userId = _currentUserService.UserId;
+        var tenantId = _currentUserService.TenantId;
         
         foreach (var entry in context.ChangeTracker.Entries<BaseEntity>())
         {
@@ -52,6 +53,15 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
                     entry.Entity.CreatedAt = now;
                     entry.Entity.CreatedByUserId = userId;
                     entry.Entity.IsDeleted = false;
+                    
+                    // Assign TenantId automatically for tenant entities
+                    if (entry.Entity is TenantEntity tenantEntity && tenantId.HasValue)
+                    {
+                        if (tenantEntity.TenantId == Guid.Empty)
+                        {
+                            tenantEntity.TenantId = tenantId.Value;
+                        }
+                    }
                     break;
                     
                 case EntityState.Modified:

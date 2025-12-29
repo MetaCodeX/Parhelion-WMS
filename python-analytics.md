@@ -1,9 +1,10 @@
 # Python Analytics Service - Documentación Técnica
 
-**Version:** 0.6.0-alpha  
+**Version:** 0.6.0-beta  
 **Bounded Context:** Analytics & Predictions  
-**Puerto:** 8000  
-**Container:** parhelion-python
+**Puerto Interno:** 8000  
+**Container:** parhelion-python  
+**Integración:** .NET API ↔ Python vía `/api/analytics/*` (Polly resilience)
 
 ---
 
@@ -347,5 +348,5 @@ sequenceDiagram
 
 ---
 
-**Última actualización:** 2025-12-28  
-**Próxima milestone:** v0.6.0-beta (Auth + ACL)
+**Última actualización:** 2025-12-29  
+**Próxima milestone:** v0.6.0-rc.1 (Stress Tests + Validation)

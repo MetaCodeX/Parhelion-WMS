@@ -30,64 +30,74 @@ Plataforma Unificada de Logística B2B (WMS + TMS) nivel Enterprise. Gestiona in
 
 ### Core
 
-- [x] Documentacion de requerimientos y esquema de base de datos
-- [x] **[NUEVO]** [Guía de Webhooks y Automatización](./service-webhooks.md)
-- [x] **Arquitectura Base:** Configuracion de Clean Architecture y estructura de proyecto
-- [x] **Multi-tenancy:** Query Filters globales por TenantId
+- [x] **Documentación Completa:** Requerimientos, esquema de BD, guías de API
+- [x] **Clean Architecture:** Domain, Application, Infrastructure, API layers
+- [x] **Multi-tenancy:** Query Filters globales + herencia automática de TenantId
 - [x] **Domain Layer:** 25 entidades + 17 enumeraciones
 - [x] **Infrastructure Layer:** EF Core + PostgreSQL + Migrations
-- [x] **API Skeleton:** 22 endpoints base para todas las entidades
-- [x] **Autenticacion:** JWT con roles SuperAdmin/Admin/Driver/Warehouse
+- [x] **API REST:** 22 endpoints CRUD para todas las entidades
+- [x] **Autorización Jerárquica:** SuperAdmin → Admin → Driver/Warehouse
 - [x] **Repository Pattern:** GenericRepository + UnitOfWork + Soft Delete
 - [x] **xUnit Tests:** 122 tests (foundation + services + business rules)
 - [x] **Services Layer:** 22 servicios (Core, Shipment, Fleet, Network, Warehouse)
 
-### Gestion de Flotilla
+### Python Analytics Service (v0.6.0)
+
+- [x] **Microservicio Python 3.12:** FastAPI + SQLAlchemy 2.0 + asyncpg
+- [x] **10 Módulos de Análisis:**
+  - Route Optimizer (NetworkX)
+  - Truck Recommender (ML)
+  - Demand Forecaster (Prophet)
+  - Anomaly Detector (Isolation Forest)
+  - Loading Optimizer (3D Bin Packing)
+  - Network Analyzer (Graph Analytics)
+  - Shipment Clusterer (K-Means)
+  - ETA Predictor (Gradient Boosting)
+  - Driver Performance (KPI Analytics)
+  - Dashboard Engine (Real-time Metrics)
+- [x] **Comunicación Inter-Servicios:** Polly resilience + internal JWT
+- [x] **Stress Tests:** 5 tests de rendimiento validados
+
+### Gestión de Flotilla
 
 - [x] **Camiones Tipificados:** DryBox, Refrigerado, HAZMAT, Plataforma, Blindado
-- [x] **Choferes:** Asignacion fija (default_truck) y dinamica (current_truck)
-- [x] **Bitacora de Flotilla:** Historial de cambios de vehiculo (FleetLog automático)
-- [x] **Telemetría GPS:** Campos LastLatitude/LastLongitude en Trucks
-- [x] **Búsqueda Geoespacial:** Endpoint `/api/drivers/nearby` (Haversine)
+- [x] **Choferes:** Asignación fija (default_truck) y dinámica (current_truck)
+- [x] **Bitácora de Flotilla:** Historial de cambios de vehículo (FleetLog automático)
+- [x] **Telemetría GPS:** Campos de latitud/longitud en Trucks
+- [x] **Búsqueda Geoespacial:** Endpoint nearby con algoritmo Haversine
 
 ### Automatización e Inteligencia (n8n)
 
-- [x] **Webhooks (Backend → n8n):** 5 tipos de eventos (ShipmentException, BookingRequest, HandshakeAttempt, StatusChanged, CheckpointCreated)
-- [x] **Notificaciones (n8n → Backend):** Push notifications persistidas para apps móviles
-- [x] **ServiceApiKey Multi-Tenant:** Autenticación de agentes IA por tenant con SHA256
-- [x] **Generación Automática:** API Key creada junto con cada nuevo Tenant
-- [x] **Agente Crisis Management:** Búsqueda de chofer cercano ante excepciones
+- [x] **Webhooks:** 5 tipos de eventos para integración externa
+- [x] **Notificaciones:** Push notifications persistidas para apps móviles
+- [x] **ServiceApiKey:** Autenticación multi-tenant para agentes IA
+- [x] **Agente Crisis Management:** Búsqueda automática de chofer cercano
 
-### Red Logistica (Hub and Spoke)
+### Red Logística (Hub and Spoke)
 
 - [x] **Nodos de Red:** RegionalHub, CrossDock, Warehouse, Store, SupplierPlant
-- [x] **Codigos Aeroportuarios:** Identificadores unicos por ubicacion (MTY, GDL, MM)
+- [x] **Códigos Únicos:** Identificadores estilo aeropuerto (MTY, GDL, CDMX)
 - [x] **Enlaces de Red:** Conexiones FirstMile, LineHaul, LastMile
-- [x] **Rutas Predefinidas:** RouteBlueprint con paradas y tiempos de transito
+- [x] **Rutas Predefinidas:** RouteBlueprint con paradas y tiempos de tránsito
 
-### Envios y Trazabilidad
+### Envíos y Trazabilidad
 
-- [x] **Manifiesto de Carga:** Items con peso volumetrico y valor declarado
-- [x] **Restricciones de Compatibilidad:** Cadena de frio, HAZMAT, Alto valor (validador automatico)
-- [x] **Checkpoints:** Bitacora de eventos (Loaded, QrScanned, ArrivedHub, Delivered)
-- [x] **Timeline Metro:** Endpoint `/api/shipment-checkpoints/timeline/{id}` con labels en español
+- [x] **Manifiesto de Carga:** Items con peso volumétrico y valor declarado
+- [x] **Restricciones de Compatibilidad:** Cadena de frío, HAZMAT, Alto valor
+- [x] **Checkpoints:** Bitácora de eventos con timeline visual
 - [ ] **QR Handshake:** Transferencia de custodia digital mediante escaneo
 
-### Documentacion B2B (Generación Dinámica)
+### Documentación B2B
 
-- [x] **Orden de Servicio:** `GET /api/documents/service-order/{id}`
-- [x] **Carta Porte (Waybill):** `GET /api/documents/waybill/{id}`
-- [x] **Manifiesto de Carga:** `GET /api/documents/manifest/{id}`
-- [x] **Hoja de Ruta:** `GET /api/documents/trip-sheet/{id}`
-- [x] **POD (Proof of Delivery):** `GET /api/documents/pod/{id}` con firma digital
+- [x] **5 Tipos de Documentos PDF:** Orden de Servicio, Carta Porte, Manifiesto, Hoja de Ruta, POD
+- [x] **Generación On-Demand:** Sin almacenamiento de archivos
+- [x] **Firma Digital:** Captura de firma en POD
 
-> Los PDFs se generan on-demand con datos de BD. Cliente crea `blob:` URL local (sin almacenamiento).
+### Operación
 
-### Operacion
-
-- [x] **Seguridad:** Autenticacion JWT con roles (Admin/Chofer/Almacenista)
+- [x] **Seguridad JWT:** Autenticación con tokens seguros
 - [ ] **Dashboard:** KPIs operativos en tiempo real
-- [ ] **Modo Demo:** Acceso para reclutadores sin registro previo
+- [ ] **Modo Demo:** Acceso para reclutadores sin registro
 
 ---
 
@@ -394,6 +404,21 @@ service-python/               # Microservicio Python (Analytics & Predictions)
 | v0.9.4  | Dashboard Base       | KPIs principales: envíos por status, ocupación |
 | v0.9.5  | Dashboard Analytics  | Métricas con Python: tendencias, predicciones  |
 | v0.9.6  | AI Predictions       | Predicción ETA, alertas de retraso             |
+| v0.9.7  | Dispatch Cutoff      | Sistema de cortes automáticos por Hub          |
+
+#### v0.9.7: Sistema de Cortes (Dispatch Cutoff)
+
+Funcionalidad inspirada en MercadoLibre para automatizar despachos:
+
+| Feature                    | Descripción                                            |
+| -------------------------- | ------------------------------------------------------ |
+| **Cutoff Config**          | Configuración de tiempos de corte por Hub/Location     |
+| **Batch Shipments**        | Agrupación automática de envíos aprobados              |
+| **Truck Assignment**       | Asignación inteligente de camiones disponibles         |
+| **Warehouse Notification** | Notificación a PDAs de almacenistas                    |
+| **Location Validation**    | Verificación de que operador y camión estén co-located |
+
+> **Flujo:** Shipments se acumulan → Admin aprueba antes del corte → Python agrupa y asigna → Warehouse recibe notificación → Despacho
 
 #### v1.0.0 - MVP Release (Q1 2026)
 

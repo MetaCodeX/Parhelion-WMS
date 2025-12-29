@@ -50,11 +50,29 @@ dev = [
 ]
 
 ml = [
-    # Future: ML/Analytics dependencies
+    # Data Analysis
     "pandas>=2.2.0",
     "numpy>=2.0.0",
-    "scikit-learn>=1.5.0",
     "openpyxl>=3.1.0",  # Excel export
+    
+    # Machine Learning
+    "scikit-learn>=1.5.0",
+    
+    # Graph Analytics (Route Optimization)
+    "networkx>=3.0",
+    
+    # Time Series Forecasting
+    # Note: prophet has complex deps, using statsmodels instead
+    "statsmodels>=0.14.0",
+    
+    # 3D Bin Packing
+    "py3dbp>=1.1.0",
+    
+    # Visualization
+    "plotly>=5.0.0",
+    
+    # Community Detection
+    "python-louvain>=0.16",  # community detection
 ]
 
 [build-system]

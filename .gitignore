@@ -92,3 +92,8 @@ pip-delete-this-directory.txt
 # Control panel is a private development tool - never committed to repository
 control-panel/
 agent/
+
+# ===== Scripts (Stress Tests / Dev Only) =====
+scripts/
+credentials.dev.txt
+stress_tests.py

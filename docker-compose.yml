@@ -44,6 +44,7 @@ services:
       - ConnectionStrings__DefaultConnection=Host=postgres;Database=parhelion_dev;Username=${DB_USER};Password=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - N8N_WEBHOOK_SECRET=${N8N_WEBHOOK_SECRET}
+      - PYTHON_ANALYTICS_URL=http://parhelion-python:8000
       - N8N_BASE_URL=${N8N_BASE_URL:-http://parhelion-n8n:5678}
     depends_on:
       postgres:
@@ -132,8 +133,9 @@ services:
       dockerfile: Dockerfile
     container_name: parhelion-python
     restart: unless-stopped
-    ports:
-      - "${PYTHON_PORT:-8000}:8000"
+    # No external ports - internal service only
+    expose:
+      - "8000"
     environment:
       # ===== DATABASE (Read Replica Pattern) =====
       - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@postgres:5432/parhelion_dev

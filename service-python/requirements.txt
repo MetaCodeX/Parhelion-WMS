@@ -1,11 +1,12 @@
-# ===================================
-# PARHELION PYTHON SERVICE - Requirements
-# Generated from pyproject.toml for Docker builds
-# ===================================
+# ========================================
+# Parhelion Python Analytics Requirements
+# v0.6.0 - Full ML Stack
+# ========================================
 
-# Web Framework
+# Core Web Framework
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
+gunicorn>=23.0.0
 
 # Database
 sqlalchemy[asyncio]>=2.0.0
@@ -20,9 +21,31 @@ httpx>=0.28.0
 
 # Security
 python-jose[cryptography]>=3.3.0
-
-# Utilities
 python-multipart>=0.0.18
 
-# Production Server
-gunicorn>=23.0.0
+# ========================================
+# ML & Analytics Stack
+# ========================================
+
+# Data Analysis
+pandas>=2.2.0
+numpy>=2.0.0
+openpyxl>=3.1.0
+
+# Machine Learning
+scikit-learn>=1.5.0
+
+# Graph Analytics
+networkx>=3.0
+
+# Time Series
+statsmodels>=0.14.0
+
+# 3D Bin Packing
+py3dbp>=1.1.0
+
+# Visualization
+plotly>=5.0.0
+
+# Community Detection
+python-louvain>=0.16
